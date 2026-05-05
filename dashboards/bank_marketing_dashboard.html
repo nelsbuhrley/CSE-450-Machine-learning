@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Marketing — ML Exploration Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+:root {
+  --bg-primary: #f4f6fa;
+  --bg-card: #ffffff;
+  --bg-header: #1a1a2e;
+  --bg-subtle: #f8f9fb;
+  --text-primary: #1c1f26;
+  --text-secondary: #6c757d;
+  --text-muted: #9aa0a6;
+  --text-on-dark: #ffffff;
+  --border: #e5e7eb;
+  --c-yes: #2a9d8f;
+  --c-no:  #e76f51;
+  --c-1: #4C72B0;
+  --c-2: #DD8452;
+  --c-3: #55A868;
+  --c-4: #C44E52;
+  --c-5: #8172B3;
+  --c-6: #937860;
+  --c-7: #DA8BC3;
+  --c-8: #8C8C8C;
+  --c-9: #CCB974;
+  --c-10:#64B5CD;
+  --positive: #2a9d8f;
+  --negative: #e76f51;
+  --gap: 14px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.45;
+  font-size: 14px;
+}
+.dashboard-container { max-width: 1480px; margin: 0 auto; padding: var(--gap); }
+.dashboard-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a2a4a 100%);
+  color: var(--text-on-dark); padding: 18px 22px; border-radius: var(--radius);
+  margin-bottom: var(--gap); box-shadow: var(--shadow);
+}
+.dashboard-header .row1 { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.dashboard-header h1 { font-size: 19px; font-weight: 600; letter-spacing:.2px;}
+.dashboard-header h1 .badge { font-size: 11px; background: rgba(255,255,255,.15); padding: 3px 8px; border-radius: 12px; margin-left: 8px; font-weight: 500;}
+.dashboard-header .sub { font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 4px; }
+
+.controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn {
+  background: rgba(255,255,255,.12); color: white; border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px; padding: 7px 12px; font-size: 12.5px; cursor: pointer; font-weight:500;
+  transition: all .15s ease;
+}
+.btn:hover { background: rgba(255,255,255,.22); }
+.btn.primary { background: #4C72B0; border-color:#4C72B0;}
+.btn.primary:hover { background: #5d83c1;}
+.btn input { display:none; }
+
+.tabs { display:flex; gap: 4px; margin-bottom: var(--gap); background: var(--bg-card); padding: 4px; border-radius: var(--radius); box-shadow: var(--shadow); overflow-x:auto;}
+.tab { padding: 9px 16px; cursor:pointer; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; transition: all .15s ease;}
+.tab:hover { background: var(--bg-subtle); color: var(--text-primary);}
+.tab.active { background: #1a1a2e; color: white; }
+
+.filter-bar {
+  background: var(--bg-card); border-radius: var(--radius); padding: 12px 16px;
+  margin-bottom: var(--gap); display:flex; gap:14px; align-items:center; flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+.filter-bar .label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
+.filter-group { display:flex; flex-direction:column; gap:4px;}
+.filter-group select, .filter-group input[type=number] {
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12.5px;
+  background: white; min-width: 120px; color: var(--text-primary);
+}
+.range-input { display:flex; gap:6px; align-items:center;}
+.range-input input { width: 78px; }
+.btn-clear { background: #f1f3f5; color: var(--text-primary); border:1px solid var(--border); border-radius:6px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-weight:500;}
+.btn-clear:hover { background: #e9ecef;}
+
+.kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.kpi-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); position:relative; overflow:hidden;}
+.kpi-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--c-1);}
+.kpi-card.k-yes::before { background: var(--c-yes);}
+.kpi-card.k-no::before { background: var(--c-no);}
+.kpi-card.k-warn::before { background: #f4a261;}
+.kpi-label { font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; font-weight:600;}
+.kpi-value { font-size: 24px; font-weight: 700; }
+.kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px;}
+
+.view { display:none; }
+.view.active { display:block; }
+
+.grid-2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: var(--gap); margin-bottom: var(--gap);}
+.grid-3 { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--gap); margin-bottom: var(--gap);}
+.grid-fixed-2 { display:grid; grid-template-columns: 1.4fr 1fr; gap: var(--gap); margin-bottom: var(--gap);}
+@media (max-width: 900px) { .grid-fixed-2 { grid-template-columns: 1fr; }}
+
+.chart-container, .panel {
+  background: var(--bg-card); border-radius: var(--radius); padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.chart-container.tall canvas { max-height: 360px; }
+.chart-container h3, .panel h3 {
+  font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.chart-container h3 .hint, .panel h3 .hint { font-size: 11px; color: var(--text-muted); font-weight: 500;}
+.chart-container canvas { max-height: 300px;}
+
+.panel .desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;}
+.feature-table { width:100%; border-collapse: collapse; font-size: 12.5px;}
+.feature-table th { text-align:left; padding: 8px 10px; border-bottom: 2px solid var(--border); font-size: 11.5px; font-weight: 600; text-transform:uppercase; letter-spacing:.4px; color: var(--text-secondary); cursor:pointer; user-select:none; white-space: nowrap;}
+.feature-table th:hover { color: var(--text-primary);}
+.feature-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0;}
+.feature-table tr:hover td { background: var(--bg-subtle);}
+.bar-cell { background: linear-gradient(to right, var(--c-1) var(--pct), transparent var(--pct)); padding-left: 6px;}
+.bar-cell-yes { background: linear-gradient(to right, var(--c-yes) var(--pct), #f0f0f0 var(--pct)); padding: 2px 4px; border-radius: 3px; color: white; font-weight: 500; min-width: 45px; display:inline-block; text-align:right;}
+
+.crosstab-controls { display:flex; gap:12px; margin-bottom: 12px; align-items:center; flex-wrap: wrap;}
+.crosstab-controls label { font-size: 12px; color: var(--text-secondary); font-weight:500; }
+.crosstab-controls select { padding: 6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12.5px; background: white;}
+
+.heatmap-table { border-collapse: collapse; font-size: 12px;}
+.heatmap-table th, .heatmap-table td { padding: 6px 10px; text-align:center; min-width:60px; }
+.heatmap-table th { font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--border);}
+.heatmap-table td.row-label { font-weight: 600; color: var(--text-secondary); text-align:left;}
+.heatmap-cell { color: var(--text-primary); font-weight: 500; border-radius: 4px;}
+
+.data-table-section { background: var(--bg-card); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); overflow-x:auto;}
+.data-table { width:100%; border-collapse: collapse; font-size: 12px;}
+.data-table thead th { text-align:left; padding: 8px 10px; border-bottom: 2px solid var(--border); font-size: 11px; font-weight:600; text-transform: uppercase; color: var(--text-secondary); cursor:pointer; user-select:none; white-space: nowrap;}
+.data-table thead th:hover { color: var(--text-primary); background: var(--bg-subtle);}
+.data-table tbody td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; white-space: nowrap;}
+.data-table tbody tr:hover td { background: var(--bg-subtle);}
+.tag { display:inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;}
+.tag-yes { background: #d2f1ed; color: #1d6f63;}
+.tag-no { background: #fde2d8; color: #a04930;}
+
+.pagination { display:flex; gap:8px; justify-content:flex-end; margin-top: 12px; align-items:center; font-size: 12.5px;}
+.pagination button { padding: 5px 10px; border:1px solid var(--border); background: white; border-radius:5px; cursor:pointer; font-size:12px;}
+.pagination button:disabled { opacity: .4; cursor:not-allowed;}
+
+.dashboard-footer { text-align:center; color: var(--text-muted); font-size: 12px; padding: 16px 0;}
+
+.loading { text-align:center; padding: 60px 20px; color: var(--text-secondary);}
+.loading .spinner { width: 36px; height: 36px; border: 3px solid #e9ecef; border-top: 3px solid var(--c-1); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;}
+@keyframes spin { to { transform: rotate(360deg);}}
+.error-box { background: #fff5f5; border-left: 4px solid var(--c-no); padding: 16px 20px; border-radius: 8px; margin: 16px 0; color: #842029;}
+
+.legend { display:flex; gap:14px; align-items:center; font-size: 12px; color: var(--text-secondary);}
+.legend-dot { width:10px; height:10px; border-radius: 50%; display:inline-block; margin-right:5px;}
+
+.callout { background: #eef4fb; border-left: 3px solid var(--c-1); padding: 10px 14px; border-radius: 6px; font-size: 12.5px; color: #1c3d5a; margin-bottom: 12px;}
+
+.numeric-stats { display:grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; font-size: 12px;}
+.numeric-stats .stat-label { color: var(--text-secondary);}
+.numeric-stats .stat-value { font-weight: 600; text-align: right;}
+
+/* Variable info tooltip */
+.var-name { display: inline-flex; align-items:center; gap:5px;}
+.info-i {
+  display: inline-flex; align-items:center; justify-content:center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #6c757d; color: white; font-size: 9px; font-weight: 700;
+  cursor: help; font-style: italic; font-family: serif;
+  position: relative;
+}
+.info-i:hover { background: var(--c-1);}
+.info-i::after {
+  content: attr(data-tip);
+  position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+  background: #1a1a2e; color: white; padding: 8px 12px; border-radius: 6px;
+  font-size: 11.5px; font-weight: 400; font-style: normal; font-family: -apple-system, sans-serif;
+  width: max-content; max-width: 320px; white-space: normal; text-align: left;
+  line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .15s;
+  z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+.info-i:hover::after { opacity: 1; }
+.var-subtitle { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; line-height: 1.3;}
+
+/* Year filter pill row */
+.year-pills { display:flex; gap:6px; flex-wrap: wrap;}
+.year-pill { padding: 4px 10px; border:1px solid var(--border); border-radius: 14px; font-size: 12px; background: white; cursor: pointer; user-select: none; transition: all .12s; }
+.year-pill:hover { border-color: var(--c-1); }
+.year-pill.active { background: var(--c-1); color: white; border-color: var(--c-1); }
+
+/* Time series legend tag */
+.time-tag { display:inline-block; background: #eef4fb; color: #1c3d5a; padding: 2px 8px; border-radius: 10px; font-size: 11.5px; font-weight: 500;}
+.time-tag.warn { background: #fff5e6; color: #8a5a00;}
+
+/* Scatter / heatmap-grid */
+.scatter-controls { display:flex; gap:12px; align-items:center; flex-wrap: wrap;}
+.scatter-controls label { font-size: 12px; color: var(--text-secondary); font-weight:500;}
+.scatter-controls select { padding: 6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12.5px; background: white;}
+.heatgrid-table { border-collapse: collapse; font-size: 11px;}
+.heatgrid-table td { padding: 4px 6px; text-align:center; min-width: 36px; height: 26px; border-radius: 2px;}
+.heatgrid-table th { padding: 4px 6px; font-weight: 600; color: var(--text-secondary); font-size: 10.5px; border-bottom: 1px solid var(--border);}
+.heatgrid-table td.empty { color: #ccc; background: #fafafa;}
+
+/* Calendar heatmap */
+.cal-heatmap-table { border-collapse: collapse; font-size: 11.5px; width: 100%;}
+.cal-heatmap-table th { padding: 6px 4px; font-weight: 600; color: var(--text-secondary); font-size: 11px; text-align: center; border-bottom: 1px solid var(--border);}
+.cal-heatmap-table td { padding: 8px 4px; text-align: center; min-width: 50px; border-radius: 4px; font-weight: 500; color: var(--text-primary);}
+.cal-heatmap-table td.row-label { font-weight: 600; color: var(--text-secondary); text-align: left; padding: 8px 10px; min-width: 60px;}
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+
+<header class="dashboard-header">
+  <div class="row1">
+    <div>
+      <h1>Bank Marketing — ML Exploration Dashboard <span class="badge">Module 02</span></h1>
+      <div class="sub">Interactive analysis of the term-deposit campaign dataset · target = <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">y</code></div>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="btn-reload">Reload from URL</button>
+      <label class="btn"><input type="file" id="file-upload" accept=".csv">Upload CSV</label>
+      <button class="btn" id="btn-export">Export view (PNG)</button>
+    </div>
+  </div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs">
+  <div class="tab active" data-view="overview">Overview</div>
+  <div class="tab" data-view="univariate">Univariate</div>
+  <div class="tab" data-view="target-rates">Target Rates</div>
+  <div class="tab" data-view="numeric">Numeric vs Target</div>
+  <div class="tab" data-view="bivariate">Crosstab Explorer</div>
+  <div class="tab" data-view="correlation">Correlation</div>
+  <div class="tab" data-view="ml-signal">Feature Signal (ML)</div>
+  <div class="tab" data-view="campaign">Campaign Mechanics</div>
+  <div class="tab" data-view="temporal">Temporal</div>
+  <div class="tab" data-view="continuous-pairs">Continuous Pairs</div>
+  <div class="tab" data-view="vs-uci">vs UCI Baseline</div>
+  <div class="tab" data-view="sample">Data Sample</div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar" id="filter-bar">
+  <span class="label">Filters:</span>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Job</span>
+    <select id="f-job" onchange="dashboard.applyFilters()"><option value="all">All jobs</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Marital</span>
+    <select id="f-marital" onchange="dashboard.applyFilters()"><option value="all">All</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Education</span>
+    <select id="f-education" onchange="dashboard.applyFilters()"><option value="all">All</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Contact</span>
+    <select id="f-contact" onchange="dashboard.applyFilters()"><option value="all">All</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Housing loan</span>
+    <select id="f-housing" onchange="dashboard.applyFilters()"><option value="all">All</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Personal loan</span>
+    <select id="f-loan" onchange="dashboard.applyFilters()"><option value="all">All</option></select>
+  </div>
+  <div class="filter-group">
+    <span style="font-size:11px;color:var(--text-muted)">Age range</span>
+    <div class="range-input">
+      <input type="number" id="f-age-min" placeholder="min" onchange="dashboard.applyFilters()">
+      <span style="font-size:12px;color:var(--text-muted)">–</span>
+      <input type="number" id="f-age-max" placeholder="max" onchange="dashboard.applyFilters()">
+    </div>
+  </div>
+  <div class="filter-group" id="year-filter-group" style="display:none">
+    <span style="font-size:11px;color:var(--text-muted)" title="Years are inferred from chronological row order + month transitions, then anchored (default = Nov 2010 per UCI). Use the Temporal tab to reanchor.">Inferred year</span>
+    <div class="year-pills" id="f-year-pills"></div>
+  </div>
+  <button class="btn-clear" onclick="dashboard.clearFilters()">Clear filters</button>
+  <span style="margin-left:auto; font-size:12.5px; color:var(--text-secondary)">
+    Showing <strong id="row-count">0</strong> of <strong id="row-total">0</strong> rows
+  </span>
+</div>
+
+<!-- Loading / status -->
+<div id="status-area"></div>
+
+<!-- KPI ROW (always visible) -->
+<section class="kpi-row" id="kpi-row" style="display:none">
+  <div class="kpi-card"><div class="kpi-label">Records</div><div class="kpi-value" id="kpi-records">—</div><div class="kpi-sub" id="kpi-records-sub">filtered subset</div></div>
+  <div class="kpi-card k-yes"><div class="kpi-label">Subscribed (yes)</div><div class="kpi-value" id="kpi-yes">—</div><div class="kpi-sub" id="kpi-yes-sub">—</div></div>
+  <div class="kpi-card k-no"><div class="kpi-label">Did not subscribe</div><div class="kpi-value" id="kpi-no">—</div><div class="kpi-sub" id="kpi-no-sub">—</div></div>
+  <div class="kpi-card"><div class="kpi-label">Conversion rate</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-sub" id="kpi-rate-sub">vs full dataset</div></div>
+  <div class="kpi-card"><div class="kpi-label">Class imbalance</div><div class="kpi-value" id="kpi-imbalance">—</div><div class="kpi-sub">no:yes ratio</div></div>
+  <div class="kpi-card k-warn"><div class="kpi-label">Avg call duration</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-sub">seconds</div></div>
+</section>
+
+<!-- ===== OVERVIEW VIEW ===== -->
+<section class="view active" id="view-overview">
+  <div class="callout">
+    <strong>About this dashboard.</strong> The dataset is from a Portuguese bank's direct-marketing campaigns (UCI Bank Marketing). Each row is a phone contact made to a client. The goal is to predict whether a client subscribed a term deposit (<code>y = yes/no</code>). Use the filters and tabs to slice the data from many ML-relevant perspectives: distributions, conversion rates, numeric splits by class, correlations, and feature-signal (mutual information / lift).
+  </div>
+  <div class="grid-fixed-2">
+    <div class="chart-container tall"><h3>Conversion rate by job <span class="hint">descending</span></h3><canvas id="ch-job-rate"></canvas></div>
+    <div class="chart-container"><h3>Target balance (y)</h3><canvas id="ch-target-balance"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><h3>Conversion rate by education</h3><canvas id="ch-edu-rate"></canvas></div>
+    <div class="chart-container"><h3>Conversion rate by previous-campaign outcome <span class="hint">poutcome</span></h3><canvas id="ch-poutcome-rate"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><h3>Age distribution by class <span class="hint">density</span></h3><canvas id="ch-age-by-class"></canvas></div>
+    <div class="chart-container"><h3>Call duration by class <span class="hint">density · seconds</span></h3><canvas id="ch-duration-by-class"></canvas></div>
+  </div>
+</section>
+
+<!-- ===== UNIVARIATE VIEW ===== -->
+<section class="view" id="view-univariate">
+  <div class="callout">
+    Profile each feature in isolation — distributions, modes, missingness, and unique-value counts. Use this to spot skew, sparsity, and dominant categories before modeling.
+  </div>
+  <div class="crosstab-controls panel">
+    <label>Feature:</label>
+    <select id="uni-feature"></select>
+    <label>Bins (numeric):</label>
+    <select id="uni-bins"><option>10</option><option selected>20</option><option>30</option><option>50</option></select>
+    <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)" id="uni-summary"></span>
+  </div>
+  <div class="grid-fixed-2">
+    <div class="chart-container tall"><h3 id="uni-chart-title">Distribution</h3><canvas id="ch-uni-dist"></canvas></div>
+    <div class="panel">
+      <h3>Summary</h3>
+      <div id="uni-stats" class="numeric-stats"></div>
+      <h3 style="margin-top:18px;">Top values</h3>
+      <table class="feature-table" id="uni-top"><thead><tr><th>Value</th><th>Count</th><th>%</th><th>Conv.</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TARGET-RATES VIEW ===== -->
+<section class="view" id="view-target-rates">
+  <div class="callout">
+    Conversion rate (yes %) per category, with sample size. <strong>Lift</strong> = how much higher/lower than the baseline rate. The horizontal bar shows lift; the dot's size encodes sample size.
+  </div>
+  <div class="crosstab-controls panel">
+    <label>Group by:</label>
+    <select id="rate-feature"></select>
+    <label>Min sample size:</label>
+    <input type="number" id="rate-min-n" value="50" min="0" style="width:80px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;">
+    <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)" id="rate-baseline"></span>
+  </div>
+  <div class="panel" style="margin-bottom:var(--gap)">
+    <table class="feature-table" id="rate-table">
+      <thead><tr>
+        <th data-sort="value">Category</th>
+        <th data-sort="n">N</th>
+        <th data-sort="rate">Conv. rate</th>
+        <th data-sort="lift">Lift vs baseline</th>
+        <th>Lift bar</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== NUMERIC VS TARGET VIEW ===== -->
+<section class="view" id="view-numeric">
+  <div class="callout">
+    Compare numeric feature distributions split by target class. <strong>Box plot</strong> shows median, IQR, and outliers per class. <strong>Overlapping density</strong> highlights where the two classes diverge — the bigger the gap, the stronger the predictive signal.
+  </div>
+  <div class="crosstab-controls panel">
+    <label>Numeric feature:</label>
+    <select id="num-feature"></select>
+    <label>Bins:</label>
+    <select id="num-bins"><option>10</option><option>15</option><option selected>20</option><option>30</option></select>
+    <span style="margin-left:auto;font-size:12px" id="num-summary"></span>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container tall"><h3>Density by class <span class="hint">overlapping histograms</span></h3><canvas id="ch-num-density"></canvas></div>
+    <div class="chart-container tall"><h3>Conversion rate across binned values</h3><canvas id="ch-num-rate-by-bin"></canvas></div>
+  </div>
+  <div class="grid-3">
+    <div class="panel"><h3>Stats — yes</h3><div id="num-stats-yes" class="numeric-stats"></div></div>
+    <div class="panel"><h3>Stats — no</h3><div id="num-stats-no" class="numeric-stats"></div></div>
+    <div class="panel"><h3>Difference (yes − no)</h3><div id="num-stats-diff" class="numeric-stats"></div></div>
+  </div>
+</section>
+
+<!-- ===== CROSSTAB VIEW ===== -->
+<section class="view" id="view-bivariate">
+  <div class="callout">
+    Two-way breakdown of conversion rate. Cell shading is colored by <strong>conversion rate</strong> (red = below baseline, green = above). Use this to find rich pockets of high or low subscribers.
+  </div>
+  <div class="crosstab-controls panel">
+    <label>Rows:</label>
+    <select id="ct-row"></select>
+    <label>Cols:</label>
+    <select id="ct-col"></select>
+    <label>Show:</label>
+    <select id="ct-show">
+      <option value="rate">Conversion rate</option>
+      <option value="count">Cell count</option>
+      <option value="yes">Yes count</option>
+    </select>
+    <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)" id="ct-baseline"></span>
+  </div>
+  <div class="panel" id="ct-panel">
+    <div id="ct-heatmap" style="overflow-x:auto"></div>
+  </div>
+</section>
+
+<!-- ===== CORRELATION VIEW ===== -->
+<section class="view" id="view-correlation">
+  <div class="callout">
+    Pearson correlation between numeric features (including the encoded target). Strong correlations (|r| &gt; 0.5) flag potential redundancy or leakage — e.g. <code>duration</code> ↔ <code>y</code> is post-hoc and shouldn't be used for production prediction.
+  </div>
+  <div class="grid-fixed-2">
+    <div class="panel">
+      <h3>Correlation heatmap</h3>
+      <div id="corr-heatmap" style="overflow-x:auto"></div>
+    </div>
+    <div class="panel">
+      <h3>Top correlations with target (y_yes)</h3>
+      <table class="feature-table" id="corr-target-table">
+        <thead><tr><th>Feature</th><th>Pearson r</th><th>Direction</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div style="margin-top:18px">
+        <h3>Strong feature-feature correlations <span class="hint">|r| &gt; 0.3, excluding target</span></h3>
+        <table class="feature-table" id="corr-pairs-table">
+          <thead><tr><th>Feature A</th><th>Feature B</th><th>r</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURE SIGNAL VIEW ===== -->
+<section class="view" id="view-ml-signal">
+  <div class="callout">
+    <strong>Mutual information</strong> measures how much knowing a feature reduces uncertainty about the target — a non-linear, model-agnostic ranking. <strong>Information value (IV)</strong> is the classic credit-scoring score: &gt;0.3 = strong, 0.1–0.3 = medium, &lt;0.02 = useless.  Higher = more predictive.
+  </div>
+  <div class="grid-fixed-2">
+    <div class="chart-container tall"><h3>Mutual information with y <span class="hint">bits</span></h3><canvas id="ch-mi"></canvas></div>
+    <div class="panel">
+      <h3>Feature signal table</h3>
+      <table class="feature-table" id="signal-table">
+        <thead><tr><th data-sort="feat">Feature</th><th data-sort="type">Type</th><th data-sort="mi">MI</th><th data-sort="iv">IV</th><th data-sort="strength">Strength</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container tall"><h3>Information value (IV) by feature</h3><canvas id="ch-iv"></canvas></div>
+    <div class="panel">
+      <h3>Best lift segments <span class="hint">≥3× baseline, n≥30</span></h3>
+      <table class="feature-table" id="lift-table">
+        <thead><tr><th>Feature</th><th>Value</th><th>N</th><th>Rate</th><th>Lift</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CAMPAIGN MECHANICS VIEW ===== -->
+<section class="view" id="view-campaign">
+  <div class="callout">
+    Operational levers: how contact channel, repeat-contact volume, prior outcome, and seasonality move conversion.
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><h3>Conversion by month of last contact</h3><canvas id="ch-month"></canvas></div>
+    <div class="chart-container"><h3>Conversion by # contacts in this campaign <span class="hint">capped at 10+</span></h3><canvas id="ch-campaign-n"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><h3>Conversion by contact channel</h3><canvas id="ch-contact"></canvas></div>
+    <div class="chart-container"><h3>Conversion by previous-campaign outcome</h3><canvas id="ch-poutcome2"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><h3>Duration vs conversion <span class="hint">binned</span></h3><canvas id="ch-duration-bins"></canvas></div>
+    <div class="chart-container"><h3>Day-of-week / day-of-month effect</h3><canvas id="ch-day"></canvas></div>
+  </div>
+</section>
+
+<!-- ===== TEMPORAL VIEW ===== -->
+<section class="view" id="view-temporal">
+  <div class="callout">
+    <strong>Important: this dataset has no year column, and your file is a subset of UCI's data — so absolute years are inferred, not measured.</strong>
+    <br><br>
+    <strong>How it works:</strong> rows are assumed chronological. We walk forward and treat any month-index <em>decrease</em> (e.g. <code>nov</code> → <code>may</code>) as a year boundary. The number of detected boundaries tells us how many calendar years your subset spans. Below you can either (a) view time as <strong>relative</strong> — the subset's own start = month 1, end = month N, no absolute calendar year — or (b) <strong>anchor</strong> the last record to a specific calendar year/month if you have outside knowledge of when the campaign ended.
+    <br><br>
+    <strong>About <code>pdays</code>:</strong> only ~3% of records have a real value (the rest = <code>-1</code> / <code>999</code> meaning "never previously contacted"). It tells you about <em>this client's prior touch</em>, not the absolute date.
+  </div>
+  <div class="panel scatter-controls" style="margin-bottom:var(--gap)">
+    <label>Time labels:</label>
+    <select id="t-mode">
+      <option value="relative" selected>Relative (subset-anchored)</option>
+      <option value="absolute">Absolute (anchored)</option>
+    </select>
+    <span id="t-anchor-controls" style="display:none; gap:8px; align-items:center; flex-wrap:wrap;">
+      <label>Anchor last record to:</label>
+      <select id="t-anchor-month">
+        <option value="1">jan</option><option value="2">feb</option><option value="3">mar</option><option value="4">apr</option>
+        <option value="5">may</option><option value="6">jun</option><option value="7">jul</option><option value="8">aug</option>
+        <option value="9">sep</option><option value="10">oct</option><option value="11" selected>nov</option><option value="12">dec</option>
+      </select>
+      <input type="number" id="t-anchor-year" value="2010" min="1900" max="2100" style="width:80px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;">
+      <span style="font-size:11px;color:var(--text-muted)">UCI default = nov 2010</span>
+    </span>
+    <span style="margin-left:auto" id="t-detection-info"></span>
+  </div>
+  <div class="grid-3" id="temporal-summary-row">
+    <div class="kpi-card"><div class="kpi-label">Inferred date span</div><div class="kpi-value" id="t-span" style="font-size:18px">—</div><div class="kpi-sub" id="t-span-sub">months covered</div></div>
+    <div class="kpi-card k-yes"><div class="kpi-label">Best month (conv. rate)</div><div class="kpi-value" id="t-best" style="font-size:18px">—</div><div class="kpi-sub" id="t-best-sub">—</div></div>
+    <div class="kpi-card k-no"><div class="kpi-label">Worst month (conv. rate)</div><div class="kpi-value" id="t-worst" style="font-size:18px">—</div><div class="kpi-sub" id="t-worst-sub">—</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container tall"><h3>Conversion rate over time <span class="hint">monthly · t=0 at dataset end</span></h3><canvas id="ch-time-rate"></canvas></div>
+    <div class="chart-container tall"><h3>Volume over time <span class="hint">contacts per month</span></h3><canvas id="ch-time-volume"></canvas></div>
+  </div>
+  <div class="grid-fixed-2">
+    <div class="panel">
+      <h3>Year × month conversion-rate heatmap <span class="hint">seasonal vs year effects</span></h3>
+      <div class="desc">Compare the same month across different inferred years to separate <em>seasonality</em> from <em>year-specific shocks</em> (e.g. the 2008 financial crisis).</div>
+      <div id="cal-heatmap" style="overflow-x:auto"></div>
+    </div>
+    <div class="panel">
+      <h3>Year-by-year breakdown</h3>
+      <table class="feature-table" id="year-table">
+        <thead><tr><th>Year</th><th>Months</th><th>Contacts</th><th>Conv. rate</th><th>Avg duration</th><th>vs end</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3 style="margin-top:14px">Pdays — when a client was previously contacted</h3>
+      <table class="feature-table" id="pdays-table">
+        <thead><tr><th>Bucket</th><th>N</th><th>Conv. rate</th><th>Lift</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="chart-container tall" style="margin-bottom:var(--gap)">
+    <h3>Conversion rate by inferred year × month <span class="hint">grouped bars</span></h3>
+    <canvas id="ch-time-yearmonth"></canvas>
+  </div>
+</section>
+
+<!-- ===== CONTINUOUS PAIRS VIEW ===== -->
+<section class="view" id="view-continuous-pairs">
+  <div class="callout">
+    Explore relationships <em>between</em> two numeric features. <strong>Scatter</strong> is best for spotting clusters and decision boundaries (sampled to 3,000 points). <strong>2D heatmap</strong> bins both axes and shades by conversion rate — best for finding rich pockets. <strong>Trend line</strong> bins X and shows the mean of Y plus the conversion rate per bin — best for monotonic relationships.
+  </div>
+  <div class="panel scatter-controls" style="margin-bottom:var(--gap)">
+    <label>X axis:</label>
+    <select id="cp-x"></select>
+    <label>Y axis:</label>
+    <select id="cp-y"></select>
+    <label>Bins (heatmap):</label>
+    <select id="cp-bins"><option>10</option><option selected>15</option><option>20</option><option>30</option></select>
+    <label>Sample (scatter):</label>
+    <select id="cp-sample"><option>1000</option><option selected>3000</option><option>6000</option><option value="0">All</option></select>
+    <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)" id="cp-summary"></span>
+  </div>
+  <div class="grid-fixed-2">
+    <div class="chart-container tall"><h3 id="cp-scatter-title">Scatter — colored by class</h3><canvas id="ch-cp-scatter"></canvas></div>
+    <div class="panel">
+      <h3>Pearson r <span class="hint">on full filtered set</span></h3>
+      <div id="cp-corr" style="font-size:24px;font-weight:700;text-align:center;padding:14px 0;">—</div>
+      <div id="cp-corr-desc" style="text-align:center;color:var(--text-secondary);font-size:12px;margin-bottom:14px"></div>
+      <h3>Within-class correlations</h3>
+      <table class="feature-table">
+        <thead><tr><th>Class</th><th>n</th><th>r(X,Y)</th></tr></thead>
+        <tbody id="cp-class-corr"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid-fixed-2">
+    <div class="panel">
+      <h3 id="cp-heatmap-title">2D heatmap — conversion rate</h3>
+      <div class="desc" style="font-size:11.5px;color:var(--text-secondary);margin-bottom:8px">Cells with n &lt; 5 are hidden (insufficient data). Color = conversion rate vs filtered baseline.</div>
+      <div id="cp-heatmap" style="overflow-x:auto"></div>
+    </div>
+    <div class="chart-container tall"><h3 id="cp-trend-title">Binned trend</h3><canvas id="ch-cp-trend"></canvas></div>
+  </div>
+</section>
+
+<!-- ===== VS UCI BASELINE VIEW ===== -->
+<section class="view" id="view-vs-uci">
+  <div class="callout">
+    <strong>Subset-vs-full comparison.</strong> Your file is a subset of the UCI Bank Marketing dataset. This view compares your subset's distributions to the published UCI reference statistics for the matching variant (auto-detected from your columns) so you can spot <em>selection bias</em> — which segments are over- or under-represented, and where conversion rates differ from the full dataset. <span style="color:var(--text-muted);font-size:11.5px">Reference stats are from Moro, S. et al. (2014), UCI ML Repository.</span>
+  </div>
+  <section class="kpi-row" id="uci-kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Detected variant</div><div class="kpi-value" id="uci-variant" style="font-size:14px;line-height:1.4">—</div><div class="kpi-sub" id="uci-variant-sub">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Subset coverage</div><div class="kpi-value" id="uci-coverage">—</div><div class="kpi-sub" id="uci-coverage-sub">— rows</div></div>
+    <div class="kpi-card k-yes"><div class="kpi-label">Subset conv. rate</div><div class="kpi-value" id="uci-rate-sub-val">—</div><div class="kpi-sub" id="uci-rate-sub-sub">vs UCI —</div></div>
+    <div class="kpi-card"><div class="kpi-label">Distribution shift (KL)</div><div class="kpi-value" id="uci-kl">—</div><div class="kpi-sub">avg across categoricals (lower = closer to UCI)</div></div>
+  </section>
+  <div class="grid-fixed-2">
+    <div class="panel">
+      <h3>Categorical distribution comparison</h3>
+      <div class="desc">Pick a feature. Bars show subset % (blue) vs UCI full-dataset % (gray). The "shift" column shows how over- or under-represented each category is in your subset.</div>
+      <div class="scatter-controls" style="margin-bottom:8px">
+        <label>Feature:</label>
+        <select id="uci-cat-feature"></select>
+      </div>
+      <canvas id="ch-uci-cat-dist" style="max-height:340px"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Conversion rate comparison <span class="hint">subset vs UCI</span></h3>
+      <div class="desc">For the same feature, how do conversion rates compare? A category where your subset rate diverges sharply from UCI suggests sampling bias or a real signal worth investigating.</div>
+      <canvas id="ch-uci-cat-rate" style="max-height:340px"></canvas>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:var(--gap)">
+    <h3>Categorical breakdown table</h3>
+    <table class="feature-table" id="uci-cat-table">
+      <thead><tr><th>Value</th><th>Subset n</th><th>Subset %</th><th>UCI %</th><th>Shift (sub − UCI)</th><th>Subset rate</th><th>UCI rate</th><th>Rate diff</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="grid-fixed-2">
+    <div class="panel">
+      <h3>Numeric features — subset vs UCI</h3>
+      <div class="desc">Means and standard deviations. The "Δ%" column is (subset_mean − UCI_mean) / UCI_mean, useful for spotting drift. Red bars highlight features where the subset mean is more than 5% off UCI.</div>
+      <table class="feature-table" id="uci-num-table">
+        <thead><tr><th>Feature</th><th>Subset mean</th><th>UCI mean</th><th>Δ%</th><th>Subset σ</th><th>UCI σ</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Most over- and under-represented segments</h3>
+      <div class="desc">Which categorical values appear at very different rates in your subset compared to UCI? n is subset count.</div>
+      <table class="feature-table" id="uci-shift-table">
+        <thead><tr><th>Feature</th><th>Value</th><th>Subset %</th><th>UCI %</th><th>Subset/UCI ratio</th><th>n</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SAMPLE VIEW ===== -->
+<section class="view" id="view-sample">
+  <div class="callout">
+    Filtered sample (first 200 rows). Click any header to sort. Use the top filter bar to narrow the dataset.
+  </div>
+  <div class="data-table-section">
+    <div id="data-table-wrap"></div>
+    <div class="pagination">
+      <button id="pg-prev">‹ Prev</button>
+      <span id="pg-info">Page 1</span>
+      <button id="pg-next">Next ›</button>
+    </div>
+  </div>
+</section>
+
+<footer class="dashboard-footer">
+  Self-contained dashboard · data fetched at runtime from <code>raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv</code>
+</footer>
+
+</div>
+
+<script>
+/* =========================================================================
+ * BANK MARKETING ML DASHBOARD
+ * ======================================================================= */
+
+const COLORS = ['#4C72B0','#DD8452','#55A868','#C44E52','#8172B3','#937860','#DA8BC3','#8C8C8C','#CCB974','#64B5CD'];
+const C_YES = '#2a9d8f';
+const C_NO = '#e76f51';
+const DATA_URL = 'https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv';
+
+/* UCI Bank Marketing data dictionary — used for tooltips throughout the dashboard.
+   Source: https://byui-cse.github.io/cse450-course/module-02/bank-dictionary.txt */
+const DICT = {
+  age:           {short:'Client age', long:'Age of the client in years (numeric).'},
+  job:           {short:'Type of job', long:"Categorical: 'admin.', 'blue-collar', 'entrepreneur', 'housemaid', 'management', 'retired', 'self-employed', 'services', 'student', 'technician', 'unemployed', 'unknown'."},
+  marital:       {short:'Marital status', long:"Categorical: 'divorced', 'married', 'single', 'unknown'. Note: 'divorced' includes widowed."},
+  education:     {short:'Education level', long:"Categorical: 'basic.4y', 'basic.6y', 'basic.9y', 'high.school', 'illiterate', 'professional.course', 'university.degree', 'unknown'. (Older versions use 'primary'/'secondary'/'tertiary'.)"},
+  default:       {short:'Credit in default?', long:"Has credit in default? Binary: 'yes', 'no', 'unknown'."},
+  balance:       {short:'Avg yearly balance (€)', long:'Average yearly balance, in euros (numeric). Older UCI variant only.'},
+  housing:       {short:'Has housing loan?', long:"Has a housing loan? Binary: 'yes', 'no', 'unknown'."},
+  loan:          {short:'Has personal loan?', long:"Has a personal loan? Binary: 'yes', 'no', 'unknown'."},
+  contact:       {short:'Contact channel', long:"Contact communication type for last contact: 'cellular', 'telephone'."},
+  month:         {short:'Last-contact month', long:"Last contact month of year: 'jan'..'dec'."},
+  day:           {short:'Last-contact day-of-month', long:'Day of the month of the last contact (numeric, 1–31). Older UCI variant.'},
+  day_of_week:   {short:'Last-contact day-of-week', long:"Day of the week of the last contact: 'mon'..'fri'. Newer UCI variant."},
+  duration:      {short:'Last call duration (sec)', long:'⚠️ TARGET-LEAKING. Last contact duration in seconds. The duration is not known before a call is performed and after the call ends, y is obviously known. Use only for benchmarks; discard for any realistic predictive model.'},
+  campaign:      {short:'# contacts this campaign', long:'Number of contacts performed during THIS campaign and for this client (includes the last contact).'},
+  pdays:         {short:'Days since prev contact', long:'Number of days since the client was last contacted from a PREVIOUS campaign. -1 (older variant) or 999 (newer) means the client was never previously contacted. ~97% of rows are "never contacted before".'},
+  previous:      {short:'# contacts before campaign', long:'Number of contacts performed BEFORE this campaign for this client.'},
+  poutcome:      {short:'Previous campaign outcome', long:"Outcome of the previous marketing campaign: 'failure', 'nonexistent', 'success', 'other' (older), 'unknown'. Strongest categorical predictor."},
+  'emp.var.rate':   {short:'Employment variation rate', long:'Quarterly employment variation rate macro-indicator (numeric). Reflects 2008-2010 economic conditions.'},
+  'cons.price.idx': {short:'Consumer price index', long:'Monthly consumer price index macro-indicator (numeric).'},
+  'cons.conf.idx':  {short:'Consumer confidence index', long:'Monthly consumer confidence index macro-indicator (numeric, typically negative).'},
+  euribor3m:        {short:'Euribor 3-month rate', long:'Daily Euribor 3-month interbank rate (numeric).'},
+  'nr.employed':    {short:'Number employed', long:'Quarterly number-of-employees macro-indicator (numeric, in thousands).'},
+  y:                {short:'Subscribed term deposit?', long:"Target variable. Has the client subscribed a term deposit? Binary: 'yes', 'no'."},
+  /* Derived columns we add */
+  __year:           {short:'Inferred calendar year', long:'Calendar year derived from chronological row order + month transitions, anchored so the last row = November 2010 per UCI documentation.'},
+  __ym:             {short:'Year-month label', long:'Inferred YYYY-MMM label for the contact, e.g. "2009-jul".'},
+  __t_offset:       {short:'Months from dataset end', long:'Negative integer: how many months before the final row this contact occurred. The last record = 0; the first record ≈ -30.'},
+};
+function dictShort(v) { return DICT[v]?.short || ''; }
+function dictLong(v)  { return DICT[v]?.long  || ''; }
+function varHTML(v) {
+  const tip = (DICT[v]?.long || '').replace(/"/g,'&quot;');
+  const sub = DICT[v]?.short || '';
+  return `<span class="var-name">${v}${tip?`<span class="info-i" data-tip="${tip}">i</span>`:''}</span>`+
+         (sub?`<div class="var-subtitle">${sub}</div>`:'');
+}
+function varInline(v) {
+  const tip = (DICT[v]?.long || '').replace(/"/g,'&quot;');
+  return `<span class="var-name"><strong>${v}</strong>${tip?`<span class="info-i" data-tip="${tip}">i</span>`:''}</span>`;
+}
+
+/* =============================================================================
+ * UCI Bank Marketing — published reference statistics for subset-vs-full comparison.
+ * Source: UCI Machine Learning Repository, Moro, S. et al. (2014). Two variants exist;
+ * we auto-detect at load time by checking which columns are present.
+ * =========================================================================== */
+const UCI_REF = {
+  /* OLDER VARIANT: bank.csv / bank-full.csv */
+  older: {
+    label: 'UCI bank-full.csv (older variant)',
+    n: 45211,
+    yes: 5289,           // = 11.70%
+    detector: cols => cols.includes('balance') && cols.includes('day') && !cols.includes('emp.var.rate'),
+    span: 'May 2008 – Nov 2010 (≈ 30 months)',
+    /* Numeric feature reference stats */
+    numeric: {
+      age:      {mean:40.94, std:10.62, min:18,    max:95,    median:39},
+      balance:  {mean:1362.27,std:3044.77,min:-8019,max:102127,median:448},
+      day:      {mean:15.81, std:8.32,  min:1,     max:31,    median:16},
+      duration: {mean:258.16,std:257.53,min:0,     max:4918,  median:180},
+      campaign: {mean:2.76,  std:3.10,  min:1,     max:63,    median:2},
+      pdays:    {mean:40.20, std:100.13,min:-1,    max:871,   median:-1},
+      previous: {mean:0.58,  std:2.30,  min:0,     max:275,   median:0},
+    },
+    /* Categorical reference distributions: { value -> {pct, rate} } */
+    categorical: {
+      job: {
+        'blue-collar':{pct:0.2153, rate:0.0727}, 'management':{pct:0.2092, rate:0.1376},
+        'technician':{pct:0.1680, rate:0.1106}, 'admin.':{pct:0.1144, rate:0.1220},
+        'services':{pct:0.0919, rate:0.0888}, 'retired':{pct:0.0501, rate:0.2279},
+        'self-employed':{pct:0.0349, rate:0.1184}, 'entrepreneur':{pct:0.0329, rate:0.0827},
+        'unemployed':{pct:0.0288, rate:0.1550}, 'housemaid':{pct:0.0274, rate:0.0879},
+        'student':{pct:0.0207, rate:0.2868}, 'unknown':{pct:0.0064, rate:0.1181},
+      },
+      marital: {
+        'married':{pct:0.6019, rate:0.1015}, 'single':{pct:0.2829, rate:0.1495},
+        'divorced':{pct:0.1152, rate:0.1196},
+      },
+      education: {
+        'secondary':{pct:0.5132, rate:0.1056}, 'tertiary':{pct:0.2942, rate:0.1500},
+        'primary':{pct:0.1515, rate:0.0863}, 'unknown':{pct:0.0411, rate:0.1357},
+      },
+      default: { 'no':{pct:0.9820, rate:0.1182}, 'yes':{pct:0.0180, rate:0.0638} },
+      housing: { 'yes':{pct:0.5558, rate:0.0770}, 'no':{pct:0.4442, rate:0.1693} },
+      loan:    { 'no':{pct:0.8398, rate:0.1264}, 'yes':{pct:0.1602, rate:0.0683} },
+      contact: { 'cellular':{pct:0.6477, rate:0.1495}, 'unknown':{pct:0.2880, rate:0.0408}, 'telephone':{pct:0.0643, rate:0.1373} },
+      month: {
+        'may':{pct:0.3045, rate:0.0673}, 'jul':{pct:0.1525, rate:0.0911},
+        'aug':{pct:0.1382, rate:0.1099}, 'jun':{pct:0.1181, rate:0.1024},
+        'nov':{pct:0.0878, rate:0.1014}, 'apr':{pct:0.0649, rate:0.1968},
+        'feb':{pct:0.0586, rate:0.1665}, 'jan':{pct:0.0310, rate:0.1019},
+        'oct':{pct:0.0163, rate:0.4376}, 'sep':{pct:0.0128, rate:0.4646},
+        'mar':{pct:0.0105, rate:0.5197}, 'dec':{pct:0.0047, rate:0.4673},
+      },
+      poutcome: {
+        'unknown':{pct:0.8174, rate:0.0917}, 'failure':{pct:0.1083, rate:0.1262},
+        'other':  {pct:0.0407, rate:0.1671}, 'success':{pct:0.0337, rate:0.6473},
+      },
+      y: { 'no':{pct:0.8830, rate:0}, 'yes':{pct:0.1170, rate:1} },
+    },
+  },
+  /* NEWER VARIANT: bank-additional-full.csv */
+  newer: {
+    label: 'UCI bank-additional-full.csv (newer variant)',
+    n: 41188,
+    yes: 4640,    // = 11.27%
+    detector: cols => cols.includes('emp.var.rate') || cols.includes('cons.price.idx'),
+    span: 'May 2008 – Nov 2010 (≈ 30 months) — same as older but with macro indicators',
+    numeric: {
+      age:              {mean:40.02, std:10.42, min:17,    max:98,    median:38},
+      duration:         {mean:258.29,std:259.28,min:0,     max:4918,  median:180},
+      campaign:         {mean:2.57,  std:2.77,  min:1,     max:56,    median:2},
+      pdays:            {mean:962.48,std:186.91,min:0,     max:999,   median:999},
+      previous:         {mean:0.17,  std:0.49,  min:0,     max:7,     median:0},
+      'emp.var.rate':   {mean:0.082, std:1.571, min:-3.4,  max:1.4,   median:1.1},
+      'cons.price.idx': {mean:93.58, std:0.579, min:92.20, max:94.77, median:93.749},
+      'cons.conf.idx':  {mean:-40.50,std:4.628, min:-50.8, max:-26.9, median:-41.8},
+      euribor3m:        {mean:3.621, std:1.735, min:0.634, max:5.045, median:4.857},
+      'nr.employed':    {mean:5167.04,std:72.25,min:4963.6,max:5228.1,median:5191.0},
+    },
+    categorical: {
+      job: {
+        'admin.':{pct:0.2530, rate:0.1297}, 'blue-collar':{pct:0.2247, rate:0.0689},
+        'technician':{pct:0.1639, rate:0.1083}, 'services':{pct:0.0964, rate:0.0814},
+        'management':{pct:0.0708, rate:0.1122}, 'retired':{pct:0.0418, rate:0.2522},
+        'entrepreneur':{pct:0.0354, rate:0.0852}, 'self-employed':{pct:0.0345, rate:0.1048},
+        'housemaid':{pct:0.0257, rate:0.1000}, 'unemployed':{pct:0.0246, rate:0.1420},
+        'student':{pct:0.0212, rate:0.3143}, 'unknown':{pct:0.0080, rate:0.1121},
+      },
+      marital: {
+        'married':{pct:0.6052, rate:0.1016}, 'single':{pct:0.2810, rate:0.1400},
+        'divorced':{pct:0.1120, rate:0.1031}, 'unknown':{pct:0.0019, rate:0.1500},
+      },
+      education: {
+        'university.degree':{pct:0.2964, rate:0.1372},
+        'high.school':{pct:0.2310, rate:0.1083},
+        'basic.9y':{pct:0.1465, rate:0.0782},
+        'professional.course':{pct:0.1271, rate:0.1135},
+        'basic.4y':{pct:0.1015, rate:0.1025},
+        'basic.6y':{pct:0.0561, rate:0.0820},
+        'unknown':{pct:0.0419, rate:0.1450},
+        'illiterate':{pct:0.0004, rate:0.2222},
+      },
+      default: {'no':{pct:0.7906, rate:0.1284}, 'unknown':{pct:0.2087, rate:0.0515}, 'yes':{pct:0.0001, rate:0}},
+      housing: {'yes':{pct:0.5238, rate:0.1162}, 'no':{pct:0.4521, rate:0.1093}, 'unknown':{pct:0.0240, rate:0.1081}},
+      loan:    {'no':{pct:0.8237, rate:0.1131}, 'yes':{pct:0.1523, rate:0.1091}, 'unknown':{pct:0.0240, rate:0.1081}},
+      contact: {'cellular':{pct:0.6347, rate:0.1474}, 'telephone':{pct:0.3653, rate:0.0524}},
+      month: {
+        'may':{pct:0.3349, rate:0.0644}, 'jul':{pct:0.1738, rate:0.0905},
+        'aug':{pct:0.1500, rate:0.1060}, 'jun':{pct:0.1290, rate:0.1051},
+        'nov':{pct:0.0995, rate:0.1014}, 'apr':{pct:0.0644, rate:0.2048},
+        'oct':{pct:0.0174, rate:0.4391}, 'sep':{pct:0.0136, rate:0.4492},
+        'mar':{pct:0.0132, rate:0.5054}, 'dec':{pct:0.0044, rate:0.4890},
+      },
+      day_of_week: {
+        'thu':{pct:0.2092, rate:0.1213}, 'mon':{pct:0.2068, rate:0.1005},
+        'wed':{pct:0.1956, rate:0.1167}, 'tue':{pct:0.1950, rate:0.1178},
+        'fri':{pct:0.1934, rate:0.1081},
+      },
+      poutcome: {'nonexistent':{pct:0.8634, rate:0.0883}, 'failure':{pct:0.1033, rate:0.1424}, 'success':{pct:0.0333, rate:0.6510}},
+      y: {'no':{pct:0.8873, rate:0}, 'yes':{pct:0.1127, rate:1}},
+    },
+  },
+};
+function detectUCIVariant(cols) {
+  if(UCI_REF.newer.detector(cols)) return UCI_REF.newer;
+  if(UCI_REF.older.detector(cols)) return UCI_REF.older;
+  return null;
+}
+
+/* ---------- numeric utilities ---------- */
+function mean(arr) { if(!arr.length) return 0; let s=0; for(const v of arr) s+=v; return s/arr.length;}
+function median(arr) { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function quantile(arr,q) { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const i=(s.length-1)*q; const lo=Math.floor(i), hi=Math.ceil(i); return lo===hi?s[lo]:s[lo]+(s[hi]-s[lo])*(i-lo);}
+function stdev(arr) { if(arr.length<2) return 0; const m=mean(arr); let s=0; for(const v of arr) s+=(v-m)*(v-m); return Math.sqrt(s/(arr.length-1));}
+function fmtPct(v,d=1) { return (v*100).toFixed(d)+'%';}
+function fmtNum(v) { if(v==null||isNaN(v)) return '—'; if(Math.abs(v)>=1e6) return (v/1e6).toFixed(2)+'M'; if(Math.abs(v)>=1e3) return (v/1e3).toFixed(1)+'K'; if(Number.isInteger(v)) return v.toLocaleString(); return v.toFixed(2);}
+function fmtInt(v) { return v==null||isNaN(v)?'—':v.toLocaleString();}
+
+/* ---------- ML metric utilities ---------- */
+function entropy(probs) { let h=0; for(const p of probs) if(p>0) h -= p*Math.log2(p); return h;}
+function mutualInfoCategorical(rows, feature, target='y') {
+  const total = rows.length; if(total===0) return 0;
+  const yCounts = {}; const xCounts = {}; const xyCounts = {};
+  for(const r of rows) {
+    const y = r[target]; const x = r[feature]; if(x==null||y==null) continue;
+    yCounts[y]=(yCounts[y]||0)+1;
+    xCounts[x]=(xCounts[x]||0)+1;
+    const k = x+'|'+y; xyCounts[k]=(xyCounts[k]||0)+1;
+  }
+  const ys = Object.keys(yCounts), xs = Object.keys(xCounts);
+  let mi = 0;
+  for(const x of xs) for(const y of ys) {
+    const pxy = (xyCounts[x+'|'+y]||0)/total;
+    if(pxy<=0) continue;
+    const px = xCounts[x]/total; const py = yCounts[y]/total;
+    mi += pxy * Math.log2(pxy/(px*py));
+  }
+  return mi;
+}
+function mutualInfoNumeric(rows, feature, target='y', bins=10) {
+  const vals = rows.map(r=>r[feature]).filter(v=>v!=null&&!isNaN(v));
+  if(!vals.length) return 0;
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  if(lo===hi) return 0;
+  const w = (hi-lo)/bins;
+  const binned = rows.map(r => {
+    const v = r[feature]; if(v==null||isNaN(v)) return null;
+    let b = Math.min(bins-1, Math.floor((v-lo)/w));
+    return {bin:b, y:r[target]};
+  }).filter(d=>d!=null);
+  return mutualInfoCategorical(binned.map(d=>({bin:d.bin, y:d.y})), 'bin', 'y');
+}
+/* Information Value for a categorical breakdown */
+function informationValue(rows, feature, target='y') {
+  const totalY = rows.filter(r=>r[target]==='yes').length;
+  const totalN = rows.filter(r=>r[target]==='no').length;
+  if(totalY===0||totalN===0) return 0;
+  const counts = {};
+  for(const r of rows) { const v = r[feature]; if(v==null) continue; if(!counts[v]) counts[v]={y:0,n:0}; if(r[target]==='yes') counts[v].y++; else if(r[target]==='no') counts[v].n++;}
+  let iv = 0;
+  for(const v of Object.keys(counts)) {
+    const py = (counts[v].y+0.5)/(totalY+0.5);
+    const pn = (counts[v].n+0.5)/(totalN+0.5);
+    iv += (py-pn)*Math.log(py/pn);
+  }
+  return iv;
+}
+function ivNumeric(rows, feature, target='y', bins=10) {
+  const vals = rows.map(r=>r[feature]).filter(v=>v!=null&&!isNaN(v));
+  if(!vals.length) return 0;
+  const sorted = [...vals].sort((a,b)=>a-b);
+  const cuts = [];
+  for(let i=1;i<bins;i++) cuts.push(sorted[Math.floor(sorted.length*i/bins)]);
+  const binned = rows.map(r => {
+    const v = r[feature]; if(v==null||isNaN(v)) return null;
+    let b = 0; while(b<cuts.length && v>cuts[b]) b++;
+    return {bin:'bin_'+b, y:r[target]};
+  }).filter(d=>d!=null);
+  return informationValue(binned, 'bin', 'y');
+}
+function pearson(xs,ys) {
+  const n = xs.length; if(n<2) return 0;
+  const mx = mean(xs), my = mean(ys);
+  let num=0, dx=0, dy=0;
+  for(let i=0;i<n;i++) { const a=xs[i]-mx, b=ys[i]-my; num+=a*b; dx+=a*a; dy+=b*b;}
+  const den = Math.sqrt(dx*dy);
+  return den===0?0:num/den;
+}
+
+/* ---------- Type detection ---------- */
+function detectColumnTypes(rows, columns) {
+  const types = {};
+  for(const c of columns) {
+    let nNum = 0, nNonNull = 0, nUniq = new Set();
+    for(const r of rows) {
+      const v = r[c]; if(v==null||v==='') continue;
+      nNonNull++;
+      nUniq.add(v);
+      if(typeof v==='number' || (!isNaN(parseFloat(v)) && isFinite(v))) nNum++;
+    }
+    if(c==='y') types[c]='target';
+    else if(nNonNull>0 && nNum/nNonNull>0.95 && nUniq.size>15) types[c]='numeric';
+    else types[c]='categorical';
+  }
+  return types;
+}
+
+/* =========================================================================
+ * Dashboard class
+ * ======================================================================= */
+class Dashboard {
+  constructor() {
+    this.rawData = [];
+    this.filteredData = [];
+    this.columns = [];
+    this.types = {};
+    this.charts = {};
+    this.baselineRate = 0;
+    this.activeView = 'overview';
+    this.tablePage = 0;
+    this.tableSort = {col:null, dir:'desc'};
+  }
+
+  async loadFromUrl() {
+    this.showStatus('<div class="loading"><div class="spinner"></div>Loading bank.csv from GitHub…</div>');
+    try {
+      const resp = await fetch(DATA_URL, {cache:'no-store'});
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const text = await resp.text();
+      this.parseCSV(text);
+    } catch(e) {
+      this.showStatus(`<div class="error-box"><strong>Could not fetch ${DATA_URL}.</strong><br>${e.message}<br><br>You can still drag-drop the CSV using the <em>Upload CSV</em> button in the header.</div>`);
+    }
+  }
+
+  loadFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => this.parseCSV(e.target.result);
+    reader.readAsText(file);
+  }
+
+  parseCSV(text) {
+    // detect delimiter
+    const firstLine = text.split('\n')[0];
+    const delim = (firstLine.match(/;/g)||[]).length > (firstLine.match(/,/g)||[]).length ? ';' : ',';
+    const parsed = Papa.parse(text, {header:true, dynamicTyping:true, skipEmptyLines:true, delimiter:delim});
+    if(!parsed.data || !parsed.data.length) { this.showStatus('<div class="error-box">Parsed file is empty.</div>'); return;}
+    // drop fully-empty rows and rows missing the target
+    this.rawData = parsed.data.filter(r => r && Object.keys(r).length>1);
+    this.columns = parsed.meta.fields || Object.keys(this.rawData[0]);
+    this.types = detectColumnTypes(this.rawData, this.columns);
+    this.inferYears(); // adds __year, __ym, __t_offset to each row + this.yearStats
+    this.showStatus('');
+    document.getElementById('kpi-row').style.display = '';
+    this.init();
+  }
+
+  /* ---------- Year inference -----------
+   * Walks rows in chronological order. Each time the month index decreases relative
+   * to the previous row, it's treated as a year boundary. The last row is anchored to
+   * November 2010 per UCI documentation. Earlier records are dated by walking back
+   * through detected boundaries. Rows with non-month / unknown values are passed through.
+   */
+  /* Step 1 of year inference: pure relative bucketing.
+     Each row gets __mIdx (1-12), __yearOffset (0-based, increments at each detected
+     year boundary). NO absolute year is assigned here. Returns {transitions, lastOffset, lastMi}. */
+  computeRelativeTime() {
+    const monthIdx = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    if(!this.columns.includes('month')) { return null; }
+    let yearOffset = 0; let prevMi = null;
+    for(let i=0; i<this.rawData.length; i++) {
+      const r = this.rawData[i];
+      const m = (r.month || '').toString().toLowerCase();
+      const mi = monthIdx[m];
+      if(mi == null) { r.__mIdx = null; r.__yearOffset = null; continue; }
+      if(prevMi != null && mi < prevMi) yearOffset += 1;
+      r.__yearOffset = yearOffset;
+      r.__mIdx = mi;
+      prevMi = mi;
+    }
+    let lastOffset = 0, lastMi = null, firstOffset = null, firstMi = null;
+    for(let i=0; i<this.rawData.length; i++) if(this.rawData[i].__mIdx != null) { firstOffset = this.rawData[i].__yearOffset; firstMi = this.rawData[i].__mIdx; break;}
+    for(let i=this.rawData.length-1; i>=0; i--) if(this.rawData[i].__mIdx != null) { lastOffset = this.rawData[i].__yearOffset; lastMi = this.rawData[i].__mIdx; break;}
+    const totalMonths = (lastOffset - firstOffset) * 12 + (lastMi - firstMi) + 1;
+    return {transitions: lastOffset, firstOffset, firstMi, lastOffset, lastMi, totalMonths};
+  }
+
+  /* Step 2: assign absolute year labels using a chosen anchor (last row → anchorYear/anchorMi).
+     Or, if mode is 'relative', skip the anchor and use subset-relative labels only. */
+  inferYears(anchorYear=null, anchorMi=null) {
+    const rel = this.computeRelativeTime();
+    if(!rel) { this.yearStats = null; return; }
+    const {firstOffset, firstMi, lastOffset, lastMi, totalMonths} = rel;
+    /* Apply anchor (default: nov 2010 if none provided — kept for back-compat but UI defaults to relative now) */
+    const aYear = anchorYear ?? 2010;
+    const aMi = anchorMi ?? 11;
+    for(const r of this.rawData) {
+      if(r.__mIdx == null) { r.__year=null; r.__ym=null; r.__t_offset=null; continue;}
+      r.__year = aYear - (lastOffset - r.__yearOffset);
+      r.__ym = `${r.__year}-${r.month}`;
+      // months from anchor end
+      r.__t_offset = (r.__year - aYear)*12 + (r.__mIdx - aMi);
+      // also store subset-relative month index (1 = first observed month, 2 = next, etc.)
+      r.__t_rel = (r.__yearOffset - firstOffset)*12 + (r.__mIdx - firstMi) + 1;
+    }
+    /* Aggregate by year */
+    const yearCounts = {};
+    for(const r of this.rawData) if(r.__year != null) {
+      const y = r.__year;
+      if(!yearCounts[y]) yearCounts[y]={n:0, yes:0, months:new Set(), durSum:0, durN:0};
+      yearCounts[y].n++;
+      if(r.y==='yes') yearCounts[y].yes++;
+      yearCounts[y].months.add(r.month);
+      if(r.duration!=null && !isNaN(r.duration)) { yearCounts[y].durSum+=Number(r.duration); yearCounts[y].durN++;}
+    }
+    this.yearStats = {byYear: yearCounts, anchorYear:aYear, anchorMi:aMi, firstOffset, firstMi, lastOffset, lastMi, totalMonths, transitions: rel.transitions};
+    /* Build year filter pills */
+    const pillBox = document.getElementById('f-year-pills');
+    if(pillBox) {
+      pillBox.innerHTML = '';
+      const years = Object.keys(yearCounts).sort();
+      if(years.length>=2) {
+        document.getElementById('year-filter-group').style.display = '';
+        for(const y of years) {
+          const p = document.createElement('div');
+          p.className='year-pill active'; p.dataset.year=y; p.textContent=y;
+          p.onclick = () => { p.classList.toggle('active'); this.applyFilters(); };
+          pillBox.appendChild(p);
+        }
+      } else {
+        document.getElementById('year-filter-group').style.display = 'none';
+      }
+    }
+    /* Make year columns available for selectors */
+    if(!this.columns.includes('__year') && Object.keys(yearCounts).length>0) {
+      this.columns.push('__year');
+      this.types.__year = 'numeric';
+    }
+  }
+  reanchorYears(year, mIdx) {
+    /* Re-run year inference with a new anchor and refresh UI */
+    this.inferYears(year, mIdx);
+    this.renderActiveView();
+  }
+
+  showStatus(html) { document.getElementById('status-area').innerHTML = html; }
+
+  init() {
+    this.populateFilters();
+    this.populateFeatureSelectors();
+    this.bindTabs();
+    this.bindControls();
+    this.applyFilters();
+    this.precomputeFullDatasetMetrics();
+    this.renderSignalView(); // requires precomputed metrics
+  }
+
+  /* ---------- filters ---------- */
+  populateFilters() {
+    const fields = ['job','marital','education','contact','housing','loan'];
+    for(const f of fields) {
+      const sel = document.getElementById('f-'+f);
+      if(!sel || !this.columns.includes(f)) continue;
+      const uniques = [...new Set(this.rawData.map(r=>r[f]).filter(v=>v!=null&&v!==''))].sort();
+      for(const u of uniques) {
+        const o = document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o);
+      }
+    }
+    if(this.columns.includes('age')) {
+      const ages = this.rawData.map(r=>r.age).filter(v=>v!=null);
+      document.getElementById('f-age-min').placeholder = Math.min(...ages);
+      document.getElementById('f-age-max').placeholder = Math.max(...ages);
+    }
+  }
+  clearFilters() {
+    ['f-job','f-marital','f-education','f-contact','f-housing','f-loan'].forEach(id=>{
+      const e = document.getElementById(id); if(e) e.value='all';
+    });
+    document.getElementById('f-age-min').value = '';
+    document.getElementById('f-age-max').value = '';
+    document.querySelectorAll('#f-year-pills .year-pill').forEach(p=>p.classList.add('active'));
+    this.applyFilters();
+  }
+  getActiveYears() {
+    const pills = document.querySelectorAll('#f-year-pills .year-pill.active');
+    if(!pills.length) return null; // no year filter present
+    return new Set([...pills].map(p=>parseInt(p.dataset.year,10)));
+  }
+  applyFilters() {
+    const job = sval('f-job'); const marital = sval('f-marital'); const edu = sval('f-education');
+    const contact = sval('f-contact'); const housing = sval('f-housing'); const loan = sval('f-loan');
+    const ageMin = parseFloat(document.getElementById('f-age-min').value);
+    const ageMax = parseFloat(document.getElementById('f-age-max').value);
+    const activeYears = this.getActiveYears();
+    const allPillsCount = document.querySelectorAll('#f-year-pills .year-pill').length;
+    const useYearFilter = activeYears && allPillsCount>0 && activeYears.size < allPillsCount;
+    this.filteredData = this.rawData.filter(r => {
+      if(job && r.job!==job) return false;
+      if(marital && r.marital!==marital) return false;
+      if(edu && r.education!==edu) return false;
+      if(contact && r.contact!==contact) return false;
+      if(housing && r.housing!==housing) return false;
+      if(loan && r.loan!==loan) return false;
+      if(!isNaN(ageMin) && r.age<ageMin) return false;
+      if(!isNaN(ageMax) && r.age>ageMax) return false;
+      if(useYearFilter && r.__year!=null && !activeYears.has(r.__year)) return false;
+      return true;
+    });
+    this.renderKPIs();
+    this.renderActiveView();
+  }
+
+  /* ---------- KPIs ---------- */
+  renderKPIs() {
+    const n = this.filteredData.length;
+    const yes = this.filteredData.filter(r=>r.y==='yes').length;
+    const no  = this.filteredData.filter(r=>r.y==='no').length;
+    const rate = n>0 ? yes/n : 0;
+    const fullRate = this.rawData.length>0 ? this.rawData.filter(r=>r.y==='yes').length/this.rawData.length : 0;
+    const lift = fullRate>0 ? rate/fullRate-1 : 0;
+    document.getElementById('row-count').textContent = n.toLocaleString();
+    document.getElementById('row-total').textContent = this.rawData.length.toLocaleString();
+    document.getElementById('kpi-records').textContent = fmtInt(n);
+    document.getElementById('kpi-records-sub').textContent = `${fmtPct(n/Math.max(1,this.rawData.length))} of total`;
+    document.getElementById('kpi-yes').textContent = fmtInt(yes);
+    document.getElementById('kpi-yes-sub').textContent = fmtPct(n>0?yes/n:0)+' of subset';
+    document.getElementById('kpi-no').textContent = fmtInt(no);
+    document.getElementById('kpi-no-sub').textContent = fmtPct(n>0?no/n:0)+' of subset';
+    document.getElementById('kpi-rate').textContent = fmtPct(rate);
+    const liftSub = (lift>=0?'+':'')+(lift*100).toFixed(1)+'% vs full';
+    const sub = document.getElementById('kpi-rate-sub'); sub.textContent = liftSub; sub.style.color = lift>=0?'var(--positive)':'var(--negative)';
+    document.getElementById('kpi-imbalance').textContent = yes>0 ? (no/yes).toFixed(1)+':1' : '∞';
+    if(this.columns.includes('duration')) {
+      const durs = this.filteredData.map(r=>r.duration).filter(v=>v!=null&&!isNaN(v));
+      document.getElementById('kpi-duration').textContent = fmtNum(mean(durs));
+    }
+    this.baselineRate = fullRate;
+  }
+
+  /* ---------- tabs ---------- */
+  bindTabs() {
+    document.querySelectorAll('.tab').forEach(t => {
+      t.onclick = () => {
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+        document.getElementById('view-'+t.dataset.view).classList.add('active');
+        this.activeView = t.dataset.view;
+        this.renderActiveView();
+      };
+    });
+  }
+  bindControls() {
+    document.getElementById('btn-reload').onclick = () => this.loadFromUrl();
+    document.getElementById('file-upload').onchange = e => { if(e.target.files[0]) this.loadFromFile(e.target.files[0]); };
+    document.getElementById('btn-export').onclick = () => this.exportPNG();
+    /* univariate */
+    document.getElementById('uni-feature').onchange = () => this.renderUnivariate();
+    document.getElementById('uni-bins').onchange = () => this.renderUnivariate();
+    /* target rates */
+    document.getElementById('rate-feature').onchange = () => this.renderTargetRates();
+    document.getElementById('rate-min-n').onchange = () => this.renderTargetRates();
+    /* numeric */
+    document.getElementById('num-feature').onchange = () => this.renderNumeric();
+    document.getElementById('num-bins').onchange = () => this.renderNumeric();
+    /* crosstab */
+    document.getElementById('ct-row').onchange = () => this.renderCrosstab();
+    document.getElementById('ct-col').onchange = () => this.renderCrosstab();
+    document.getElementById('ct-show').onchange = () => this.renderCrosstab();
+    /* continuous pairs */
+    document.getElementById('cp-x').onchange = () => this.renderContinuousPairs();
+    document.getElementById('cp-y').onchange = () => this.renderContinuousPairs();
+    document.getElementById('cp-bins').onchange = () => this.renderContinuousPairs();
+    document.getElementById('cp-sample').onchange = () => this.renderContinuousPairs();
+    /* temporal anchor */
+    document.getElementById('t-mode').onchange = () => {
+      const mode = document.getElementById('t-mode').value;
+      document.getElementById('t-anchor-controls').style.display = mode==='absolute' ? 'inline-flex' : 'none';
+      this.timeMode = mode;
+      this.renderTemporal();
+    };
+    document.getElementById('t-anchor-month').onchange = () => this.applyAnchor();
+    document.getElementById('t-anchor-year').onchange = () => this.applyAnchor();
+    /* uci comparison */
+    document.getElementById('uci-cat-feature').onchange = () => this.renderUCIComparison();
+  }
+  applyAnchor() {
+    const mi = parseInt(document.getElementById('t-anchor-month').value, 10);
+    const yr = parseInt(document.getElementById('t-anchor-year').value, 10);
+    if(!isNaN(mi) && !isNaN(yr)) this.reanchorYears(yr, mi);
+  }
+
+  populateFeatureSelectors() {
+    const cats = this.columns.filter(c => this.types[c]==='categorical' && c!=='y');
+    const nums = this.columns.filter(c => this.types[c]==='numeric' && !c.startsWith('__'));
+    const all = [...cats, ...nums];
+    fillSelect('uni-feature', all);
+    fillSelect('rate-feature', cats);
+    fillSelect('num-feature', nums);
+    fillSelect('ct-row', cats, cats[0]);
+    fillSelect('ct-col', cats, cats[1] || cats[0]);
+    /* Continuous pairs — restrict to numeric columns; default to (age, duration) when present */
+    fillSelect('cp-x', nums, nums.includes('age') ? 'age' : nums[0]);
+    fillSelect('cp-y', nums, nums.includes('duration') ? 'duration' : (nums.includes('balance') ? 'balance' : nums[1] || nums[0]));
+    /* Add tooltips to all selectors via title attribute on options */
+    ['uni-feature','rate-feature','num-feature','ct-row','ct-col','cp-x','cp-y'].forEach(id=>{
+      const sel = document.getElementById(id); if(!sel) return;
+      [...sel.options].forEach(o => { if(DICT[o.value]) o.title = DICT[o.value].long; });
+    });
+  }
+
+  renderActiveView() {
+    switch(this.activeView) {
+      case 'overview': this.renderOverview(); break;
+      case 'univariate': this.renderUnivariate(); break;
+      case 'target-rates': this.renderTargetRates(); break;
+      case 'numeric': this.renderNumeric(); break;
+      case 'bivariate': this.renderCrosstab(); break;
+      case 'correlation': this.renderCorrelation(); break;
+      case 'ml-signal': this.renderSignalView(); break;
+      case 'campaign': this.renderCampaign(); break;
+      case 'temporal': this.renderTemporal(); break;
+      case 'continuous-pairs': this.renderContinuousPairs(); break;
+      case 'vs-uci': this.renderUCIComparison(); break;
+      case 'sample': this.renderSample(); break;
+    }
+  }
+
+  /* ============================================================
+   *  OVERVIEW
+   * ============================================================ */
+  renderOverview() {
+    const data = this.filteredData;
+    /* target balance doughnut */
+    const yes = data.filter(r=>r.y==='yes').length, no = data.filter(r=>r.y==='no').length;
+    this.upsertChart('ch-target-balance','doughnut',{
+      labels:['no','yes'], datasets:[{data:[no,yes], backgroundColor:[C_NO, C_YES], borderColor:'#fff', borderWidth:2}]
+    },{cutout:'65%', plugins:{legend:{position:'right'}, tooltip:{callbacks:{label:c=>{const t=c.dataset.data.reduce((a,b)=>a+b,0); return `${c.label}: ${fmtInt(c.parsed)} (${fmtPct(c.parsed/t)})`;}}}}});
+
+    /* conversion by job */
+    if(this.columns.includes('job')) this.renderRateBar('ch-job-rate', data, 'job', {sort:'rate', desc:true});
+    /* conversion by education */
+    if(this.columns.includes('education')) this.renderRateBar('ch-edu-rate', data, 'education', {sort:'rate', desc:true});
+    /* conversion by poutcome */
+    if(this.columns.includes('poutcome')) this.renderRateBar('ch-poutcome-rate', data, 'poutcome', {sort:'rate', desc:true});
+
+    /* age distribution by class */
+    if(this.columns.includes('age')) this.renderNumericByClass('ch-age-by-class', data, 'age', 20);
+    /* duration distribution by class */
+    if(this.columns.includes('duration')) this.renderNumericByClass('ch-duration-by-class', data, 'duration', 25, {clipQuantile:0.99});
+  }
+
+  renderRateBar(canvasId, data, feature, opts={}) {
+    const groups = {};
+    for(const r of data) {
+      const v = r[feature]; if(v==null||v==='') continue;
+      if(!groups[v]) groups[v]={y:0,n:0,t:0};
+      if(r.y==='yes') groups[v].y++; else if(r.y==='no') groups[v].n++;
+      groups[v].t++;
+    }
+    let entries = Object.entries(groups).map(([k,v])=>({k, n:v.t, rate:v.t>0?v.y/v.t:0}));
+    if(opts.sort==='rate') entries.sort((a,b)=>opts.desc?b.rate-a.rate:a.rate-b.rate);
+    else entries.sort((a,b)=>opts.desc?b.n-a.n:a.n-b.n);
+    const labels = entries.map(e=>e.k);
+    const rates = entries.map(e=>e.rate*100);
+    const counts = entries.map(e=>e.n);
+    this.upsertChart(canvasId,'bar',{
+      labels, datasets:[
+        {label:'Conversion %', data:rates, backgroundColor:rates.map(v=>v>=this.baselineRate*100?'#2a9d8fcc':'#e76f51cc'), yAxisID:'y'},
+      ]
+    },{
+      indexAxis: labels.length>6?'y':'x',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=>`${entries[c.dataIndex].k}: ${rates[c.dataIndex].toFixed(1)}% (n=${counts[c.dataIndex].toLocaleString()})`}}},
+      scales: labels.length>6
+        ? {x:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y:{ticks:{autoSkip:false}}}
+        : {y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}}
+    });
+  }
+
+  renderNumericByClass(canvasId, data, feature, bins=20, opts={}) {
+    const valsYes = data.filter(r=>r.y==='yes').map(r=>r[feature]).filter(v=>v!=null&&!isNaN(v));
+    const valsNo  = data.filter(r=>r.y==='no').map(r=>r[feature]).filter(v=>v!=null&&!isNaN(v));
+    let lo = Math.min(...valsYes, ...valsNo);
+    let hi = Math.max(...valsYes, ...valsNo);
+    if(opts.clipQuantile) {
+      const all = [...valsYes,...valsNo].sort((a,b)=>a-b);
+      hi = all[Math.floor(all.length*opts.clipQuantile)] || hi;
+    }
+    if(!isFinite(lo)||!isFinite(hi)||lo===hi) { this.upsertChart(canvasId,'bar',{labels:[],datasets:[]},{}); return;}
+    const w = (hi-lo)/bins;
+    const labels = []; const yArr = new Array(bins).fill(0); const nArr = new Array(bins).fill(0);
+    for(let i=0;i<bins;i++) labels.push(fmtNum(lo + i*w));
+    for(const v of valsYes) { let b = Math.min(bins-1, Math.max(0, Math.floor((v-lo)/w))); yArr[b]++;}
+    for(const v of valsNo)  { let b = Math.min(bins-1, Math.max(0, Math.floor((v-lo)/w))); nArr[b]++;}
+    // density (normalize to fraction)
+    const ySum = yArr.reduce((a,b)=>a+b,0)||1;
+    const nSum = nArr.reduce((a,b)=>a+b,0)||1;
+    this.upsertChart(canvasId,'bar',{
+      labels, datasets:[
+        {label:'no (density)', data:nArr.map(v=>v/nSum), backgroundColor:'#e76f5180', borderColor:'#e76f51', borderWidth:1},
+        {label:'yes (density)', data:yArr.map(v=>v/ySum), backgroundColor:'#2a9d8f80', borderColor:'#2a9d8f', borderWidth:1},
+      ]
+    },{
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${(c.parsed.y*100).toFixed(1)}%`}}},
+      scales:{x:{stacked:false, ticks:{maxTicksLimit:10}}, y:{beginAtZero:true, ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}
+    });
+  }
+
+  /* ============================================================
+   *  UNIVARIATE
+   * ============================================================ */
+  renderUnivariate() {
+    const f = sval('uni-feature', true); if(!f) return;
+    const data = this.filteredData;
+    const type = this.types[f];
+    document.getElementById('uni-chart-title').firstChild.textContent = `Distribution of "${f}"`;
+    const valsAll = data.map(r=>r[f]);
+    const nonNull = valsAll.filter(v=>v!=null&&v!=='');
+    const nullFrac = (valsAll.length-nonNull.length)/Math.max(1,valsAll.length);
+    document.getElementById('uni-summary').innerHTML = `${type} · ${nonNull.length.toLocaleString()} non-null · ${(nullFrac*100).toFixed(1)}% missing`;
+
+    if(type==='numeric') {
+      const nums = nonNull.map(Number).filter(v=>!isNaN(v));
+      const bins = parseInt(document.getElementById('uni-bins').value, 10);
+      const lo = Math.min(...nums), hi = Math.max(...nums);
+      const w = (hi-lo)/bins || 1;
+      const labels = [], counts = new Array(bins).fill(0);
+      for(let i=0;i<bins;i++) labels.push(fmtNum(lo+i*w));
+      for(const v of nums) { let b = Math.min(bins-1, Math.max(0, Math.floor((v-lo)/w))); counts[b]++;}
+      this.upsertChart('ch-uni-dist','bar',{labels, datasets:[{label:'count', data:counts, backgroundColor:'#4C72B0CC', borderColor:'#4C72B0', borderWidth:1}]},
+        {plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}, x:{ticks:{maxTicksLimit:12}}}});
+      const stats = {
+        'Count':fmtInt(nums.length), 'Missing':fmtPct(nullFrac),
+        'Mean':fmtNum(mean(nums)), 'Std dev':fmtNum(stdev(nums)),
+        'Min':fmtNum(Math.min(...nums)), 'Max':fmtNum(Math.max(...nums)),
+        'Q1':fmtNum(quantile(nums,0.25)), 'Median':fmtNum(median(nums)),
+        'Q3':fmtNum(quantile(nums,0.75)), 'IQR':fmtNum(quantile(nums,0.75)-quantile(nums,0.25)),
+      };
+      renderStatsBlock('uni-stats', stats);
+      // top values for numeric (binned) – just show buckets
+      const tbody = document.querySelector('#uni-top tbody'); tbody.innerHTML = '';
+      const sorted = labels.map((l,i)=>({l, c:counts[i], idx:i})).sort((a,b)=>b.c-a.c).slice(0,10);
+      for(const s of sorted) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.l}</td><td>${fmtInt(s.c)}</td><td>${fmtPct(s.c/nums.length)}</td><td>—</td>`;
+        tbody.appendChild(tr);
+      }
+    } else {
+      const counts = {};
+      const yesCounts = {};
+      for(const r of data) {
+        const v = r[f]; if(v==null||v==='') continue;
+        counts[v]=(counts[v]||0)+1;
+        if(r.y==='yes') yesCounts[v]=(yesCounts[v]||0)+1;
+      }
+      const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const labels = entries.map(e=>e[0]);
+      const cnts = entries.map(e=>e[1]);
+      this.upsertChart('ch-uni-dist','bar',{labels, datasets:[{label:'count', data:cnts, backgroundColor:labels.map((_,i)=>COLORS[i%COLORS.length]+'CC')}]},
+        {indexAxis: labels.length>8?'y':'x', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true},y:{beginAtZero:true}}});
+      const stats = {
+        'Count':fmtInt(nonNull.length),'Missing':fmtPct(nullFrac),
+        'Unique':fmtInt(labels.length),
+        'Mode':labels[0]||'—',
+        'Mode freq':fmtPct((cnts[0]||0)/Math.max(1,nonNull.length)),
+        'Top 3 share':fmtPct(cnts.slice(0,3).reduce((a,b)=>a+b,0)/Math.max(1,nonNull.length)),
+      };
+      renderStatsBlock('uni-stats', stats);
+      const tbody = document.querySelector('#uni-top tbody'); tbody.innerHTML = '';
+      for(const [v,c] of entries.slice(0,12)) {
+        const yc = yesCounts[v]||0;
+        const rate = c>0?yc/c:0;
+        const tr = document.createElement('tr');
+        const pct = (c/nonNull.length*100);
+        tr.innerHTML = `<td>${v}</td><td>${fmtInt(c)}</td>
+          <td><span style="display:inline-block;background:linear-gradient(to right,#4C72B040 ${pct}%,transparent ${pct}%);padding:2px 6px;border-radius:3px">${pct.toFixed(1)}%</span></td>
+          <td><span class="bar-cell-yes" style="--pct:${(rate*100*4).toFixed(1)}%;background:${rate>=this.baselineRate?'#2a9d8f':'#e76f51'};color:white;padding:2px 6px;border-radius:3px">${(rate*100).toFixed(1)}%</span></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+  }
+
+  /* ============================================================
+   *  TARGET RATES
+   * ============================================================ */
+  renderTargetRates() {
+    const f = sval('rate-feature', true); if(!f) return;
+    const minN = parseInt(document.getElementById('rate-min-n').value,10) || 0;
+    const data = this.filteredData;
+    const groups = {};
+    for(const r of data) { const v = r[f]; if(v==null||v==='') continue; if(!groups[v])groups[v]={y:0,t:0}; groups[v].t++; if(r.y==='yes') groups[v].y++;}
+    const baseline = data.length>0 ? data.filter(r=>r.y==='yes').length/data.length : 0;
+    document.getElementById('rate-baseline').textContent = `Filtered baseline: ${fmtPct(baseline)} · feature: ${f}`;
+    const rows = Object.entries(groups).map(([k,v])=>({value:k, n:v.t, rate:v.t>0?v.y/v.t:0, lift:baseline>0&&v.t>0?(v.y/v.t)/baseline-1:0}))
+      .filter(r=>r.n>=minN).sort((a,b)=>b.lift-a.lift);
+    const tbody = document.querySelector('#rate-table tbody'); tbody.innerHTML='';
+    const maxAbsLift = Math.max(...rows.map(r=>Math.abs(r.lift)),0.01);
+    for(const r of rows) {
+      const tr = document.createElement('tr');
+      const liftBarPct = Math.min(100, Math.abs(r.lift)/maxAbsLift*100);
+      const liftColor = r.lift>=0?'#2a9d8f':'#e76f51';
+      const sign = r.lift>=0?'+':'';
+      tr.innerHTML = `<td>${r.value}</td>
+        <td>${fmtInt(r.n)}</td>
+        <td>${fmtPct(r.rate)}</td>
+        <td style="color:${liftColor};font-weight:600">${sign}${(r.lift*100).toFixed(1)}%</td>
+        <td><div style="position:relative;height:14px;background:#f1f3f5;border-radius:3px;overflow:hidden">
+          <div style="position:absolute;top:0;${r.lift>=0?'left:50%':'right:50%'};width:${liftBarPct/2}%;height:100%;background:${liftColor}"></div>
+          <div style="position:absolute;top:0;left:50%;width:1px;height:100%;background:#999"></div>
+        </div></td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  /* ============================================================
+   *  NUMERIC vs TARGET
+   * ============================================================ */
+  renderNumeric() {
+    const f = sval('num-feature', true); if(!f) return;
+    const bins = parseInt(document.getElementById('num-bins').value,10);
+    const data = this.filteredData;
+    const valsYes = data.filter(r=>r.y==='yes').map(r=>r[f]).filter(v=>v!=null&&!isNaN(v));
+    const valsNo = data.filter(r=>r.y==='no').map(r=>r[f]).filter(v=>v!=null&&!isNaN(v));
+    if(!valsYes.length && !valsNo.length) return;
+    document.getElementById('num-summary').textContent = `n(yes)=${valsYes.length.toLocaleString()} · n(no)=${valsNo.length.toLocaleString()}`;
+    /* density */
+    let lo = Math.min(...valsYes, ...valsNo); let hi = Math.max(...valsYes, ...valsNo);
+    // clip top 1% to keep charts readable
+    const all = [...valsYes,...valsNo].sort((a,b)=>a-b);
+    hi = all[Math.floor(all.length*0.99)] || hi;
+    const w = (hi-lo)/bins || 1;
+    const labels=[], yA=new Array(bins).fill(0), nA=new Array(bins).fill(0), allA=new Array(bins).fill(0), yesInBin=new Array(bins).fill(0);
+    for(let i=0;i<bins;i++) labels.push(fmtNum(lo+i*w));
+    for(const v of valsYes) { let b=Math.min(bins-1,Math.max(0,Math.floor((v-lo)/w))); yA[b]++; allA[b]++; yesInBin[b]++;}
+    for(const v of valsNo) { let b=Math.min(bins-1,Math.max(0,Math.floor((v-lo)/w))); nA[b]++; allA[b]++;}
+    const ys=yA.reduce((a,b)=>a+b,0)||1, ns=nA.reduce((a,b)=>a+b,0)||1;
+    this.upsertChart('ch-num-density','bar',{
+      labels,
+      datasets:[
+        {label:'no', data:nA.map(v=>v/ns), backgroundColor:'#e76f5180', borderColor:'#e76f51', borderWidth:1},
+        {label:'yes', data:yA.map(v=>v/ys), backgroundColor:'#2a9d8f80', borderColor:'#2a9d8f', borderWidth:1},
+      ]
+    },{plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${(c.parsed.y*100).toFixed(2)}% in bin`}}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>(v*100).toFixed(0)+'%'}}, x:{ticks:{maxTicksLimit:10}}}});
+    /* rate by bin */
+    const rateBin = allA.map((c,i)=>c>0?yesInBin[i]/c:0);
+    this.upsertChart('ch-num-rate-by-bin','bar',{
+      labels, datasets:[
+        {type:'bar', label:'count', data:allA, backgroundColor:'#dee2e6', yAxisID:'y2', borderWidth:0},
+        {type:'line', label:'conv. rate', data:rateBin.map(v=>v*100), borderColor:'#4C72B0', backgroundColor:'#4C72B033', tension:.3, yAxisID:'y', pointRadius:3},
+      ]
+    },{
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>c.dataset.label==='conv. rate'?`conv. rate: ${c.parsed.y.toFixed(1)}%`:`count: ${fmtInt(c.parsed.y)}`}}},
+      scales:{y:{position:'left', beginAtZero:true, ticks:{callback:v=>v+'%'}, title:{display:true,text:'Conversion %'}}, y2:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true,text:'Count'}}, x:{ticks:{maxTicksLimit:10}}}
+    });
+
+    const stat = arr => ({
+      'Count':fmtInt(arr.length),'Mean':fmtNum(mean(arr)),'Median':fmtNum(median(arr)),'Std':fmtNum(stdev(arr)),
+      'Q1':fmtNum(quantile(arr,0.25)),'Q3':fmtNum(quantile(arr,0.75)),'Min':fmtNum(Math.min(...arr)),'Max':fmtNum(Math.max(...arr))
+    });
+    const sy = stat(valsYes), sn = stat(valsNo);
+    renderStatsBlock('num-stats-yes', sy);
+    renderStatsBlock('num-stats-no', sn);
+    const diff = {};
+    for(const k of Object.keys(sy)) if(['Mean','Median','Std','Q1','Q3'].includes(k)) {
+      const a = parseFloat(sy[k].toString().replace(/[^\d.\-]/g,'')); const b = parseFloat(sn[k].toString().replace(/[^\d.\-]/g,''));
+      const d = a-b;
+      diff[k] = (d>=0?'+':'') + fmtNum(d);
+    }
+    renderStatsBlock('num-stats-diff', diff);
+  }
+
+  /* ============================================================
+   *  CROSSTAB
+   * ============================================================ */
+  renderCrosstab() {
+    const r = sval('ct-row', true); const c = sval('ct-col', true); const show = document.getElementById('ct-show').value;
+    if(!r||!c) return;
+    const data = this.filteredData;
+    const baseline = data.length>0?data.filter(r=>r.y==='yes').length/data.length:0;
+    document.getElementById('ct-baseline').textContent = `Baseline conv. rate (filtered): ${fmtPct(baseline)}`;
+    const rowSet = [...new Set(data.map(d=>d[r]).filter(v=>v!=null&&v!==''))].sort();
+    const colSet = [...new Set(data.map(d=>d[c]).filter(v=>v!=null&&v!==''))].sort();
+    const grid = {}; for(const rv of rowSet) { grid[rv]={}; for(const cv of colSet) grid[rv][cv]={t:0,y:0};}
+    for(const d of data) { const rv=d[r], cv=d[c]; if(rv==null||cv==null||rv===''||cv==='') continue; if(!grid[rv]||!grid[rv][cv]) continue; grid[rv][cv].t++; if(d.y==='yes') grid[rv][cv].y++;}
+
+    let html = '<table class="heatmap-table"><thead><tr><th></th>';
+    for(const cv of colSet) html += `<th>${cv}</th>`;
+    html += '</tr></thead><tbody>';
+    for(const rv of rowSet) {
+      html += `<tr><td class="row-label">${rv}</td>`;
+      for(const cv of colSet) {
+        const cell = grid[rv][cv];
+        let val, txt;
+        if(show==='rate') { val = cell.t>0?cell.y/cell.t:null; txt = val==null?'—':(val*100).toFixed(0)+'%';}
+        else if(show==='count') { val = cell.t; txt = fmtInt(cell.t);}
+        else { val = cell.y; txt = fmtInt(cell.y);}
+        let bg = '#f1f3f5';
+        if(show==='rate' && val!=null) {
+          const dev = val - baseline;
+          const norm = Math.max(-1, Math.min(1, dev / Math.max(0.01, baseline)));
+          if(norm>=0) bg = `rgba(42,157,143,${0.15+norm*0.7})`;
+          else bg = `rgba(231,111,81,${0.15+(-norm)*0.7})`;
+        } else if(show==='count' || show==='yes') {
+          const max = Math.max(...rowSet.flatMap(rv2=>colSet.map(cv2=>show==='count'?grid[rv2][cv2].t:grid[rv2][cv2].y)));
+          const norm = max>0?val/max:0;
+          bg = `rgba(76,114,176,${0.1+norm*0.7})`;
+        }
+        const tip = `${rv} × ${cv}\nrate: ${cell.t>0?(cell.y/cell.t*100).toFixed(1)+'%':'—'}\nyes: ${cell.y}\nn: ${cell.t}`;
+        html += `<td class="heatmap-cell" style="background:${bg}" title="${tip}">${txt}<div style="font-size:10px;color:#666">n=${cell.t}</div></td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('ct-heatmap').innerHTML = html;
+  }
+
+  /* ============================================================
+   *  CORRELATION
+   * ============================================================ */
+  renderCorrelation() {
+    const data = this.filteredData;
+    const numCols = this.columns.filter(col => this.types[col]==='numeric');
+    const all = [...numCols, 'y_yes'];
+    /* build matrix */
+    const matrix = [];
+    const series = {};
+    for(const c of numCols) series[c] = data.map(r=>r[c]).map(v=>v==null||isNaN(v)?null:Number(v));
+    series.y_yes = data.map(r=>r.y==='yes'?1:r.y==='no'?0:null);
+    /* compute correlations */
+    for(const a of all) {
+      const row = [];
+      for(const b of all) {
+        if(a===b) { row.push(1); continue;}
+        const xs=[], ys=[];
+        for(let i=0;i<data.length;i++) { const va=series[a][i], vb=series[b][i]; if(va==null||vb==null) continue; xs.push(va); ys.push(vb);}
+        row.push(xs.length>1 ? pearson(xs,ys) : 0);
+      }
+      matrix.push(row);
+    }
+    /* render heatmap */
+    let html = '<table class="heatmap-table"><thead><tr><th></th>';
+    for(const c of all) html += `<th style="font-size:11px">${c}</th>`;
+    html += '</tr></thead><tbody>';
+    for(let i=0;i<all.length;i++) {
+      html += `<tr><td class="row-label" style="font-size:11px">${all[i]}</td>`;
+      for(let j=0;j<all.length;j++) {
+        const v = matrix[i][j];
+        const a = Math.min(1, Math.abs(v));
+        const bg = v>=0?`rgba(42,157,143,${a*0.85})`:`rgba(231,111,81,${a*0.85})`;
+        const txt = v.toFixed(2);
+        const color = a>0.5?'white':'#1c1f26';
+        html += `<td style="background:${bg};color:${color};font-size:11px">${txt}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('corr-heatmap').innerHTML = html;
+    /* top correlations with target */
+    const yIdx = all.indexOf('y_yes');
+    const targetCorr = all.map((c,i) => ({c, r:matrix[i][yIdx]})).filter(o=>o.c!=='y_yes').sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+    let tHtml = '';
+    for(const o of targetCorr) {
+      const dir = o.r>=0?'positive':'negative';
+      const color = o.r>=0?'#2a9d8f':'#e76f51';
+      tHtml += `<tr><td>${o.c}</td><td style="color:${color};font-weight:600">${o.r.toFixed(3)}</td><td>${dir}</td></tr>`;
+    }
+    document.querySelector('#corr-target-table tbody').innerHTML = tHtml;
+    /* feature pairs */
+    const pairs = [];
+    for(let i=0;i<numCols.length;i++) for(let j=i+1;j<numCols.length;j++) {
+      const r = matrix[i][j];
+      if(Math.abs(r)>0.3) pairs.push({a:numCols[i], b:numCols[j], r});
+    }
+    pairs.sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+    let pHtml = '';
+    for(const p of pairs.slice(0,15)) {
+      const color = p.r>=0?'#2a9d8f':'#e76f51';
+      pHtml += `<tr><td>${p.a}</td><td>${p.b}</td><td style="color:${color};font-weight:600">${p.r.toFixed(3)}</td></tr>`;
+    }
+    document.querySelector('#corr-pairs-table tbody').innerHTML = pHtml || '<tr><td colspan="3" style="text-align:center;color:#999">No pairs with |r| > 0.3</td></tr>';
+  }
+
+  /* ============================================================
+   *  FEATURE SIGNAL (ML)
+   * ============================================================ */
+  precomputeFullDatasetMetrics() {
+    /* compute mi/iv on raw (unfiltered) data so it stays comparable */
+    const sigs = [];
+    for(const c of this.columns) {
+      if(c==='y') continue;
+      const t = this.types[c];
+      let mi=0, iv=0;
+      if(t==='categorical') { mi = mutualInfoCategorical(this.rawData, c); iv = informationValue(this.rawData, c); }
+      else if(t==='numeric') { mi = mutualInfoNumeric(this.rawData, c, 'y', 10); iv = ivNumeric(this.rawData, c, 'y', 10);}
+      sigs.push({feat:c, type:t, mi, iv});
+    }
+    this.signalMetrics = sigs;
+    /* compute best lift segments (categorical) */
+    const baseline = this.rawData.filter(r=>r.y==='yes').length/this.rawData.length;
+    const lifts = [];
+    for(const c of this.columns) {
+      if(c==='y' || this.types[c]!=='categorical') continue;
+      const groups = {};
+      for(const r of this.rawData) { const v=r[c]; if(v==null||v==='') continue; if(!groups[v])groups[v]={t:0,y:0}; groups[v].t++; if(r.y==='yes') groups[v].y++;}
+      for(const [k,v] of Object.entries(groups)) {
+        if(v.t<30) continue;
+        const rate = v.y/v.t; const lift = baseline>0?rate/baseline:0;
+        if(lift>=2 || lift<=0.5) lifts.push({feat:c, value:k, n:v.t, rate, lift});
+      }
+    }
+    lifts.sort((a,b)=>Math.abs(b.lift-1)-Math.abs(a.lift-1));
+    this.bestLifts = lifts;
+    this.fullBaseline = baseline;
+  }
+
+  renderSignalView() {
+    if(!this.signalMetrics) return;
+    const sigs = [...this.signalMetrics].sort((a,b)=>b.mi-a.mi);
+    const labelsMI = sigs.map(s=>s.feat); const dataMI = sigs.map(s=>s.mi);
+    this.upsertChart('ch-mi','bar',{labels:labelsMI, datasets:[{label:'MI (bits)', data:dataMI, backgroundColor:'#4C72B0CC', borderColor:'#4C72B0'}]},
+      {indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}}});
+    const ivSigs = [...this.signalMetrics].sort((a,b)=>b.iv-a.iv);
+    this.upsertChart('ch-iv','bar',{labels:ivSigs.map(s=>s.feat), datasets:[{label:'IV', data:ivSigs.map(s=>s.iv), backgroundColor:ivSigs.map(s=>s.iv>0.3?'#2a9d8fCC':s.iv>0.1?'#f4a261CC':s.iv>0.02?'#e9c46aCC':'#cccccc')}]},
+      {indexAxis:'y', plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>{const v=c.parsed.x; const cat=v>0.3?'strong':v>0.1?'medium':v>0.02?'weak':'useless'; return `IV: ${v.toFixed(3)} (${cat})`;}}}}, scales:{x:{beginAtZero:true}}});
+
+    const tbody = document.querySelector('#signal-table tbody'); tbody.innerHTML='';
+    for(const s of sigs) {
+      const cat = s.iv>0.3?'strong':s.iv>0.1?'medium':s.iv>0.02?'weak':'useless';
+      const color = s.iv>0.3?'#2a9d8f':s.iv>0.1?'#f4a261':s.iv>0.02?'#e9c46a':'#999';
+      const tip = (DICT[s.feat]?.long || '').replace(/"/g,'&quot;');
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td><strong title="${tip}">${s.feat}</strong>${tip?'<span class="info-i" data-tip="'+tip+'" style="margin-left:4px">i</span>':''}</td><td>${s.type}</td><td>${s.mi.toFixed(4)}</td><td>${s.iv.toFixed(3)}</td><td style="color:${color};font-weight:600">${cat}</td>`;
+      tbody.appendChild(tr);
+    }
+    const lifts = this.bestLifts.slice(0,20);
+    const ltbody = document.querySelector('#lift-table tbody'); ltbody.innerHTML = '';
+    for(const l of lifts) {
+      const color = l.lift>=1?'#2a9d8f':'#e76f51';
+      ltbody.innerHTML += `<tr><td>${l.feat}</td><td>${l.value}</td><td>${fmtInt(l.n)}</td><td>${fmtPct(l.rate)}</td><td style="color:${color};font-weight:600">${l.lift.toFixed(2)}×</td></tr>`;
+    }
+  }
+
+  /* ============================================================
+   *  CAMPAIGN MECHANICS
+   * ============================================================ */
+  renderCampaign() {
+    const data = this.filteredData;
+    /* month */
+    if(this.columns.includes('month')) {
+      const monthOrder = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      const counts={};
+      for(const r of data) { const m=r.month; if(m==null) continue; if(!counts[m]) counts[m]={t:0,y:0}; counts[m].t++; if(r.y==='yes') counts[m].y++;}
+      const ordered = monthOrder.filter(m=>counts[m]);
+      this.upsertChart('ch-month','bar',{
+        labels:ordered, datasets:[
+          {type:'bar', label:'count', data:ordered.map(m=>counts[m].t), backgroundColor:'#dee2e6', yAxisID:'y2', order:2},
+          {type:'line', label:'conv. rate', data:ordered.map(m=>(counts[m].y/counts[m].t)*100), borderColor:'#4C72B0', backgroundColor:'#4C72B033', tension:.35, yAxisID:'y', pointRadius:4, order:1},
+        ]
+      },{plugins:{legend:{position:'top'}}, scales:{y:{position:'left', beginAtZero:true, ticks:{callback:v=>v+'%'}}, y2:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}}}});
+    }
+    /* campaign # contacts capped */
+    if(this.columns.includes('campaign')) {
+      const buckets = {};
+      for(const r of data) { const v=r.campaign; if(v==null) continue; const k = v>=10?'10+':String(v); if(!buckets[k]) buckets[k]={t:0,y:0}; buckets[k].t++; if(r.y==='yes') buckets[k].y++;}
+      const order = [...Array(10).keys()].map(i=>String(i+1)).concat(['10+']);
+      const ord = order.filter(k=>buckets[k]);
+      this.upsertChart('ch-campaign-n','bar',{
+        labels:ord, datasets:[
+          {type:'bar', label:'count', data:ord.map(k=>buckets[k].t), backgroundColor:'#dee2e6', yAxisID:'y2'},
+          {type:'line', label:'conv. rate', data:ord.map(k=>(buckets[k].y/buckets[k].t)*100), borderColor:'#C44E52', tension:.3, yAxisID:'y', pointRadius:3},
+        ]
+      },{plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y2:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}}}});
+    }
+    if(this.columns.includes('contact')) this.renderRateBar('ch-contact', data, 'contact', {sort:'rate', desc:true});
+    if(this.columns.includes('poutcome')) this.renderRateBar('ch-poutcome2', data, 'poutcome', {sort:'rate', desc:true});
+
+    /* duration bins */
+    if(this.columns.includes('duration')) {
+      const cuts = [0,60,120,180,300,600,9999];
+      const labels = ['<60s','60-120s','120-180s','180-300s','300-600s','600s+'];
+      const buckets = labels.map(()=>({t:0,y:0}));
+      for(const r of data) { const v=r.duration; if(v==null) continue; let b=0; for(let i=1;i<cuts.length;i++) if(v>=cuts[i-1]&&v<cuts[i]) {b=i-1;break;} buckets[b].t++; if(r.y==='yes') buckets[b].y++;}
+      this.upsertChart('ch-duration-bins','bar',{
+        labels, datasets:[
+          {type:'bar', label:'count', data:buckets.map(b=>b.t), backgroundColor:'#dee2e6', yAxisID:'y2'},
+          {type:'line', label:'conv. rate', data:buckets.map(b=>b.t>0?(b.y/b.t)*100:0), borderColor:'#2a9d8f', tension:.3, yAxisID:'y', pointRadius:4},
+        ]
+      },{plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y2:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}}}});
+    }
+
+    /* day */
+    const dayCol = this.columns.includes('day_of_week') ? 'day_of_week' : (this.columns.includes('day') ? 'day' : null);
+    if(dayCol) {
+      const isWeek = dayCol==='day_of_week';
+      const order = isWeek ? ['mon','tue','wed','thu','fri'] : null;
+      const counts={};
+      for(const r of data) { const v=r[dayCol]; if(v==null) continue; if(!counts[v]) counts[v]={t:0,y:0}; counts[v].t++; if(r.y==='yes') counts[v].y++;}
+      const ord = order ? order.filter(k=>counts[k]) : Object.keys(counts).sort((a,b)=>(+a)-(+b));
+      this.upsertChart('ch-day','bar',{
+        labels:ord, datasets:[
+          {type:'bar', label:'count', data:ord.map(k=>counts[k].t), backgroundColor:'#dee2e6', yAxisID:'y2'},
+          {type:'line', label:'conv. rate', data:ord.map(k=>(counts[k].y/counts[k].t)*100), borderColor:'#8172B3', tension:.3, yAxisID:'y', pointRadius:3},
+        ]
+      },{plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y2:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}}}});
+    }
+  }
+
+  /* ============================================================
+   *  SAMPLE TABLE
+   * ============================================================ */
+  renderSample() {
+    const wrap = document.getElementById('data-table-wrap');
+    const cols = this.columns;
+    let data = [...this.filteredData];
+    if(this.tableSort.col) {
+      const c = this.tableSort.col, d = this.tableSort.dir==='asc'?1:-1;
+      data.sort((x,y)=>{ const xv=x[c], yv=y[c]; if(xv==null) return 1; if(yv==null) return -1; return xv<yv?-d:xv>yv?d:0;});
+    }
+    const pageSize = 50; const totalPages = Math.max(1, Math.ceil(data.length/pageSize));
+    if(this.tablePage>=totalPages) this.tablePage = totalPages-1;
+    if(this.tablePage<0) this.tablePage=0;
+    const start = this.tablePage*pageSize;
+    const slice = data.slice(start, start+pageSize);
+    let html = '<table class="data-table"><thead><tr>';
+    for(const c of cols) {
+      const arrow = this.tableSort.col===c ? (this.tableSort.dir==='asc'?' ▲':' ▼') : '';
+      const tip = (DICT[c]?.long || '').replace(/"/g,'&quot;');
+      html += `<th data-col="${c}" title="${tip}">${c}${arrow}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+    for(const r of slice) {
+      html += '<tr>';
+      for(const c of cols) {
+        let v = r[c];
+        if(c==='y') {
+          html += `<td><span class="${v==='yes'?'tag tag-yes':'tag tag-no'}">${v}</span></td>`;
+        } else {
+          html += `<td>${v==null?'':v}</td>`;
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    document.getElementById('pg-info').textContent = `Page ${this.tablePage+1} of ${totalPages} · showing rows ${start+1}–${Math.min(start+pageSize,data.length)}`;
+    document.getElementById('pg-prev').disabled = this.tablePage===0;
+    document.getElementById('pg-next').disabled = this.tablePage>=totalPages-1;
+    document.getElementById('pg-prev').onclick = ()=>{ this.tablePage--; this.renderSample();};
+    document.getElementById('pg-next').onclick = ()=>{ this.tablePage++; this.renderSample();};
+    wrap.querySelectorAll('th[data-col]').forEach(th=>{
+      th.onclick = ()=>{
+        const c = th.dataset.col;
+        if(this.tableSort.col===c) this.tableSort.dir = this.tableSort.dir==='asc'?'desc':'asc';
+        else { this.tableSort.col = c; this.tableSort.dir='desc';}
+        this.tablePage = 0;
+        this.renderSample();
+      };
+    });
+  }
+
+  /* ============================================================
+   *  TEMPORAL VIEW
+   * ============================================================ */
+  renderTemporal() {
+    if(!this.yearStats) {
+      document.getElementById('view-temporal').querySelector('.callout').innerHTML +=
+        '<br><strong style="color:#a04930">No "month" column found — temporal view requires a month column.</strong>';
+      return;
+    }
+    const mode = document.getElementById('t-mode').value;
+    this.timeMode = mode;
+    const data = this.filteredData;
+    const monthOrder = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const monthAbbr = m => monthOrder[m-1];
+    /* Show detection info */
+    const det = `Detected <strong>${this.yearStats.transitions+1}</strong> calendar year${this.yearStats.transitions===0?'':'s'} (${this.yearStats.transitions} month-rollover transitions) covering ~<strong>${this.yearStats.totalMonths}</strong> months.`;
+    document.getElementById('t-detection-info').innerHTML = `<span style="font-size:11.5px;color:var(--text-secondary)">${det}</span>`;
+
+    /* Build (yearOffset, month) → bucket. In relative mode we use yearOffset (0,1,2...).
+       In absolute mode we use the resolved year. */
+    const useAbs = mode === 'absolute';
+    const labelFor = b => useAbs ? `${b.year}-${b.month}` : `m${b.relIdx}-${b.month}`;
+    const ymBuckets = new Map();
+    for(const r of data) {
+      if(r.__year==null || r.__mIdx==null) continue;
+      const yKey = useAbs ? r.__year : r.__yearOffset;
+      const k = yKey*100 + r.__mIdx;
+      if(!ymBuckets.has(k)) {
+        const relIdx = r.__t_rel; // 1-based subset position
+        ymBuckets.set(k, {yKey, year:r.__year, mIdx:r.__mIdx, month:r.month, t_offset:r.__t_offset, relIdx, n:0, yes:0, durSum:0});
+      }
+      const b = ymBuckets.get(k);
+      b.n++; if(r.y==='yes') b.yes++;
+      if(r.duration!=null && !isNaN(r.duration)) b.durSum += Number(r.duration);
+    }
+    const sortedBuckets = [...ymBuckets.values()].sort((a,b)=>a.yKey-b.yKey || a.mIdx-b.mIdx);
+    /* KPIs */
+    if(sortedBuckets.length>0) {
+      const first = sortedBuckets[0], last = sortedBuckets[sortedBuckets.length-1];
+      const spanText = useAbs
+        ? `${first.year}-${first.month} → ${last.year}-${last.month}`
+        : `${first.month} (m1) → ${last.month} (m${last.relIdx})`;
+      document.getElementById('t-span').textContent = spanText;
+      const monthsCovered = (last.relIdx - first.relIdx) + 1;
+      document.getElementById('t-span-sub').textContent = `${monthsCovered} month span · ${ymBuckets.size} distinct months observed${useAbs?' · absolute (anchor='+this.yearStats.anchorYear+'-'+monthAbbr(this.yearStats.anchorMi)+')':' · relative (subset-anchored)'}`;
+      const sortedByRate = [...sortedBuckets].filter(b=>b.n>=20).sort((a,b)=>(b.yes/b.n)-(a.yes/a.n));
+      if(sortedByRate.length) {
+        const best = sortedByRate[0], worst = sortedByRate[sortedByRate.length-1];
+        document.getElementById('t-best').textContent = labelFor(best);
+        document.getElementById('t-best-sub').textContent = `${(best.yes/best.n*100).toFixed(1)}% conv · n=${best.n.toLocaleString()}`;
+        document.getElementById('t-worst').textContent = labelFor(worst);
+        document.getElementById('t-worst-sub').textContent = `${(worst.yes/worst.n*100).toFixed(1)}% conv · n=${worst.n.toLocaleString()}`;
+      }
+    }
+    /* Line: rate over time */
+    const labels = sortedBuckets.map(b=>labelFor(b));
+    const tooltipLabels = sortedBuckets.map(b=>useAbs ? `${b.year}-${b.month} (t${b.t_offset>=0?'+':''}${b.t_offset}m, m${b.relIdx})` : `${b.month} · subset month ${b.relIdx} of ${this.yearStats.totalMonths}`);
+    const rates = sortedBuckets.map(b=>b.n>0?(b.yes/b.n*100):0);
+    const counts = sortedBuckets.map(b=>b.n);
+    this.upsertChart('ch-time-rate','line',{
+      labels, datasets:[{label:'conv. rate %', data:rates, borderColor:'#4C72B0', backgroundColor:'#4C72B033', tension:0.25, pointRadius:3, fill:true}]
+    },{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{title:items=>tooltipLabels[items[0].dataIndex], label:c=>`conv. rate: ${c.parsed.y.toFixed(1)}%  (n=${counts[c.dataIndex].toLocaleString()})`}}},
+      scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}, title:{display:true,text:'Conversion rate'}}, x:{ticks:{maxTicksLimit:14, autoSkip:true}}}
+    });
+    this.upsertChart('ch-time-volume','bar',{
+      labels, datasets:[{label:'contacts', data:counts, backgroundColor:'#DD8452CC'}]
+    },{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{title:items=>tooltipLabels[items[0].dataIndex], label:c=>`contacts: ${c.parsed.y.toLocaleString()}`}}},
+      scales:{y:{beginAtZero:true, title:{display:true,text:'# contacts'}}, x:{ticks:{maxTicksLimit:14}}}
+    });
+    /* Calendar heatmap (year × month). In relative mode we label rows as "Year 1", "Year 2", etc. */
+    const yKeys = [...new Set(sortedBuckets.map(b=>b.yKey))].sort((a,b)=>a-b);
+    let html = '<table class="cal-heatmap-table"><thead><tr><th></th>';
+    for(const m of monthOrder) html += `<th>${m}</th>`;
+    html += '<th>Row avg</th></tr></thead><tbody>';
+    const baseline = data.filter(r=>r.y==='yes').length / Math.max(1, data.length);
+    for(const y of yKeys) {
+      const yLabel = useAbs ? String(y) : `Year ${y - this.yearStats.firstOffset + 1}`;
+      html += `<tr><td class="row-label">${yLabel}</td>`;
+      let yN=0, yYes=0;
+      for(const m of monthOrder) {
+        const mIdx = monthOrder.indexOf(m)+1;
+        const k = y*100+mIdx;
+        const b = ymBuckets.get(k);
+        if(!b) { html += '<td class="empty">—</td>'; continue;}
+        yN+=b.n; yYes+=b.yes;
+        const rate = b.yes/b.n;
+        const dev = rate - baseline;
+        const norm = Math.max(-1, Math.min(1, dev / Math.max(0.01, baseline)));
+        const bg = norm>=0 ? `rgba(42,157,143,${0.15+norm*0.7})` : `rgba(231,111,81,${0.15+(-norm)*0.7})`;
+        const yLabelTip = useAbs ? `${y}-${m}` : `Year ${y - this.yearStats.firstOffset + 1} · ${m} (subset m${b.relIdx})`;
+        const tOffStr = useAbs ? `\nt-offset: ${b.t_offset}m` : '';
+        const tip = `${yLabelTip}\nconv. rate: ${(rate*100).toFixed(1)}%\nn = ${b.n.toLocaleString()}${tOffStr}`;
+        html += `<td style="background:${bg}" title="${tip}">${(rate*100).toFixed(1)}%<div style="font-size:9px;color:#666">n=${fmtInt(b.n)}</div></td>`;
+      }
+      const yRate = yN>0 ? yYes/yN : 0;
+      const yColor = yRate>=baseline ? '#2a9d8f' : '#e76f51';
+      html += `<td style="font-weight:700;color:${yColor};border-left:2px solid #dee2e6">${(yRate*100).toFixed(1)}%</td></tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('cal-heatmap').innerHTML = html;
+    /* Year table */
+    let ytHtml = '';
+    for(const y of yKeys) {
+      const filteredYR = sortedBuckets.filter(b=>b.yKey===y);
+      const fN = filteredYR.reduce((a,b)=>a+b.n,0);
+      const fY = filteredYR.reduce((a,b)=>a+b.yes,0);
+      const fDur = filteredYR.reduce((a,b)=>a+b.durSum,0);
+      const rate = fN>0 ? fY/fN : 0;
+      const avgDur = fN>0 ? fDur/fN : 0;
+      const monthsInYear = filteredYR.length;
+      let labelCell, offsetCell;
+      if(useAbs) {
+        const yearOffsetMonths = (y - this.yearStats.anchorYear) * 12;
+        const offsetLabel = yearOffsetMonths === 0 ? 'anchor year' : `${yearOffsetMonths} mo (~${(-yearOffsetMonths/12).toFixed(1)} yr before anchor)`;
+        labelCell = `<strong>${y}</strong>`;
+        offsetCell = `<span class="time-tag${y<this.yearStats.anchorYear?' warn':''}">${offsetLabel}</span>`;
+      } else {
+        const idx = y - this.yearStats.firstOffset + 1;
+        labelCell = `<strong>Year ${idx}</strong>`;
+        offsetCell = `<span class="time-tag">subset year ${idx} of ${this.yearStats.transitions+1}</span>`;
+      }
+      ytHtml += `<tr><td>${labelCell}</td><td>${monthsInYear}</td><td>${fmtInt(fN)}</td><td style="font-weight:600;color:${rate>=baseline?'#2a9d8f':'#e76f51'}">${fmtPct(rate)}</td><td>${fmtNum(avgDur)}s</td><td>${offsetCell}</td></tr>`;
+    }
+    document.querySelector('#year-table tbody').innerHTML = ytHtml;
+    /* pdays bucket table */
+    if(this.columns.includes('pdays')) {
+      const buckets = [
+        {label:'Never contacted', test:v=>v===-1||v===999||v==null},
+        {label:'≤7 days',        test:v=>v>=0 && v<=7 && v!==999},
+        {label:'8–30 days',      test:v=>v>7 && v<=30 && v!==999},
+        {label:'31–90 days',     test:v=>v>30 && v<=90 && v!==999},
+        {label:'91–180 days',    test:v=>v>90 && v<=180 && v!==999},
+        {label:'181+ days',      test:v=>v>180 && v!==999},
+      ];
+      const counts = buckets.map(()=>({n:0, yes:0}));
+      for(const r of data) {
+        const v = r.pdays;
+        for(let i=0;i<buckets.length;i++) if(buckets[i].test(v)) { counts[i].n++; if(r.y==='yes') counts[i].yes++; break;}
+      }
+      let pHtml = '';
+      const baselineRate = data.filter(r=>r.y==='yes').length / Math.max(1, data.length);
+      for(let i=0;i<buckets.length;i++) {
+        const c = counts[i]; const rate = c.n>0?c.yes/c.n:0;
+        const lift = baselineRate>0 ? rate/baselineRate : 0;
+        pHtml += `<tr><td>${buckets[i].label}</td><td>${fmtInt(c.n)}</td><td>${fmtPct(rate)}</td><td style="color:${lift>=1?'#2a9d8f':'#e76f51'};font-weight:600">${lift.toFixed(2)}×</td></tr>`;
+      }
+      document.querySelector('#pdays-table tbody').innerHTML = pHtml;
+    } else {
+      document.querySelector('#pdays-table tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">pdays column not present</td></tr>';
+    }
+    /* Year × month grouped bar */
+    const datasets = yKeys.map((y,i)=>({
+      label: useAbs ? String(y) : `Year ${y - this.yearStats.firstOffset + 1}`,
+      data: monthOrder.map(m => {
+        const mi = monthOrder.indexOf(m)+1;
+        const b = ymBuckets.get(y*100+mi);
+        return b ? (b.yes/b.n*100) : null;
+      }),
+      backgroundColor: COLORS[i%COLORS.length] + 'CC',
+      borderColor: COLORS[i%COLORS.length],
+      borderWidth: 1,
+    }));
+    this.upsertChart('ch-time-yearmonth','bar',{labels: monthOrder, datasets},{
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>c.parsed.y==null?`${c.dataset.label}: no data`:`${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}, title:{display:true,text:'Conversion %'}}}
+    });
+  }
+
+  /* ============================================================
+   *  VS UCI BASELINE VIEW
+   * ============================================================ */
+  renderUCIComparison() {
+    const ref = detectUCIVariant(this.columns);
+    if(!ref) {
+      document.getElementById('uci-variant').innerHTML = '<span style="color:#a04930">Cannot match UCI variant</span>';
+      document.getElementById('uci-variant-sub').textContent = 'Your columns don\'t look like either UCI Bank Marketing variant';
+      return;
+    }
+    document.getElementById('uci-variant').textContent = ref.label;
+    document.getElementById('uci-variant-sub').textContent = ref.span;
+    const data = this.filteredData;
+    const subN = data.length;
+    const subYes = data.filter(r=>r.y==='yes').length;
+    const subRate = subN>0 ? subYes/subN : 0;
+    const uciRate = ref.yes / ref.n;
+    document.getElementById('uci-coverage').textContent = `${fmtPct(subN/ref.n)}`;
+    document.getElementById('uci-coverage-sub').textContent = `${fmtInt(subN)} of ${fmtInt(ref.n)} UCI rows`;
+    const rateDiff = subRate - uciRate;
+    const rateColor = Math.abs(rateDiff)<0.005 ? 'var(--text-primary)' : (rateDiff>0 ? 'var(--positive)' : 'var(--negative)');
+    document.getElementById('uci-rate-sub-val').textContent = fmtPct(subRate);
+    const rsub = document.getElementById('uci-rate-sub-sub');
+    rsub.textContent = `vs UCI ${fmtPct(uciRate)} (${rateDiff>=0?'+':''}${(rateDiff*100).toFixed(2)}pp)`;
+    rsub.style.color = rateColor;
+
+    /* Populate cat feature select if not yet populated */
+    const catSel = document.getElementById('uci-cat-feature');
+    const catFeatures = Object.keys(ref.categorical).filter(c => c!=='y' && this.columns.includes(c));
+    if(catSel.options.length===0 || ![...catSel.options].some(o=>o.value===catSel.value)) {
+      fillSelect('uci-cat-feature', catFeatures, catFeatures.includes('job') ? 'job' : catFeatures[0]);
+      [...catSel.options].forEach(o => { if(DICT[o.value]) o.title = DICT[o.value].long; });
+    }
+    const feature = catSel.value;
+    if(!feature || !ref.categorical[feature]) return;
+
+    /* Compute subset distribution + rates for the selected feature */
+    const sub = {}; // value -> {n, yes}
+    for(const r of data) {
+      const v = r[feature]; if(v==null||v==='') continue;
+      if(!sub[v]) sub[v]={n:0,yes:0};
+      sub[v].n++; if(r.y==='yes') sub[v].yes++;
+    }
+    const refDist = ref.categorical[feature];
+    const allValues = [...new Set([...Object.keys(refDist), ...Object.keys(sub)])].sort();
+    const rows = allValues.map(v => {
+      const s = sub[v] || {n:0, yes:0};
+      const sPct = subN>0 ? s.n/subN : 0;
+      const sRate = s.n>0 ? s.yes/s.n : null;
+      const uPct = refDist[v]?.pct ?? 0;
+      const uRate = refDist[v]?.rate ?? null;
+      return {value:v, sN:s.n, sPct, sRate, uPct, uRate, shift:sPct-uPct, ratio: uPct>0 ? sPct/uPct : null};
+    }).sort((a,b) => b.sPct - a.sPct);
+
+    /* Distribution comparison chart */
+    this.upsertChart('ch-uci-cat-dist','bar',{
+      labels: rows.map(r=>r.value),
+      datasets:[
+        {label:'Your subset %', data:rows.map(r=>r.sPct*100), backgroundColor:'#4C72B0CC', borderColor:'#4C72B0', borderWidth:1},
+        {label:'UCI full %',    data:rows.map(r=>r.uPct*100), backgroundColor:'#9aa0a6AA', borderColor:'#6c757d', borderWidth:1},
+      ]
+    },{
+      indexAxis: rows.length>6 ? 'y' : 'x',
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed[rows.length>6?'x':'y'].toFixed(2)}%`}}},
+      scales: rows.length>6
+        ? {x:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y:{ticks:{autoSkip:false}}}
+        : {y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}}
+    });
+    /* Rate comparison chart */
+    this.upsertChart('ch-uci-cat-rate','bar',{
+      labels: rows.map(r=>r.value),
+      datasets:[
+        {label:'Your subset rate', data:rows.map(r=>r.sRate==null?null:r.sRate*100), backgroundColor:'#2a9d8fCC', borderColor:'#2a9d8f', borderWidth:1},
+        {label:'UCI full rate', data:rows.map(r=>r.uRate==null?null:r.uRate*100), backgroundColor:'#9aa0a6AA', borderColor:'#6c757d', borderWidth:1},
+      ]
+    },{
+      indexAxis: rows.length>6 ? 'y' : 'x',
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>{const v=c.parsed[rows.length>6?'x':'y']; return `${c.dataset.label}: ${v==null?'—':v.toFixed(1)+'%'}`;}}}},
+      scales: rows.length>6
+        ? {x:{beginAtZero:true, ticks:{callback:v=>v+'%'}}, y:{ticks:{autoSkip:false}}}
+        : {y:{beginAtZero:true, ticks:{callback:v=>v+'%'}}}
+    });
+    /* Categorical breakdown table */
+    const tbody = document.querySelector('#uci-cat-table tbody'); tbody.innerHTML='';
+    for(const r of rows) {
+      const shiftPP = r.shift*100;
+      const shiftColor = Math.abs(shiftPP)<1 ? 'var(--text-secondary)' : (shiftPP>0 ? 'var(--positive)' : 'var(--negative)');
+      const rateDiff = (r.sRate==null||r.uRate==null) ? null : (r.sRate-r.uRate)*100;
+      const rateDiffColor = rateDiff==null ? 'var(--text-secondary)' : (Math.abs(rateDiff)<1 ? 'var(--text-secondary)' : (rateDiff>0 ? 'var(--positive)' : 'var(--negative)'));
+      tbody.innerHTML += `<tr>
+        <td><strong>${r.value}</strong></td>
+        <td>${fmtInt(r.sN)}</td>
+        <td>${(r.sPct*100).toFixed(2)}%</td>
+        <td>${(r.uPct*100).toFixed(2)}%</td>
+        <td style="color:${shiftColor};font-weight:600">${shiftPP>=0?'+':''}${shiftPP.toFixed(2)}pp</td>
+        <td>${r.sRate==null?'—':(r.sRate*100).toFixed(1)+'%'}</td>
+        <td>${r.uRate==null?'—':(r.uRate*100).toFixed(1)+'%'}</td>
+        <td style="color:${rateDiffColor};font-weight:600">${rateDiff==null?'—':((rateDiff>=0?'+':'')+rateDiff.toFixed(1)+'pp')}</td>
+      </tr>`;
+    }
+
+    /* Numeric features table */
+    const numTbody = document.querySelector('#uci-num-table tbody'); numTbody.innerHTML='';
+    const numRefs = ref.numeric;
+    for(const f of Object.keys(numRefs)) {
+      if(!this.columns.includes(f)) continue;
+      const vals = data.map(r=>r[f]).filter(v=>v!=null && !isNaN(v)).map(Number);
+      if(!vals.length) continue;
+      const sMean = mean(vals), sStd = stdev(vals);
+      const uMean = numRefs[f].mean, uStd = numRefs[f].std;
+      const dPct = uMean!==0 ? (sMean-uMean)/Math.abs(uMean)*100 : 0;
+      const flag = Math.abs(dPct) > 5;
+      const color = flag ? (dPct>0?'var(--positive)':'var(--negative)') : 'var(--text-primary)';
+      numTbody.innerHTML += `<tr>
+        <td><strong>${f}</strong>${DICT[f]?'<span class="info-i" data-tip="'+(DICT[f].long||'').replace(/"/g,'&quot;')+'" style="margin-left:4px">i</span>':''}</td>
+        <td>${fmtNum(sMean)}</td>
+        <td>${fmtNum(uMean)}</td>
+        <td style="color:${color};font-weight:${flag?700:500}">${dPct>=0?'+':''}${dPct.toFixed(1)}%</td>
+        <td>${fmtNum(sStd)}</td>
+        <td>${fmtNum(uStd)}</td>
+      </tr>`;
+    }
+    /* Most over/under-represented segments — across all categorical features */
+    const allShifts = [];
+    for(const f of catFeatures) {
+      const refF = ref.categorical[f]; if(!refF) continue;
+      const subF = {};
+      for(const r of data) { const v = r[f]; if(v==null||v==='') continue; if(!subF[v]) subF[v]={n:0}; subF[v].n++;}
+      const allV = new Set([...Object.keys(refF), ...Object.keys(subF)]);
+      for(const v of allV) {
+        const sN = subF[v]?.n || 0;
+        const sPct = subN>0 ? sN/subN : 0;
+        const uPct = refF[v]?.pct || 0;
+        if(uPct < 0.005 && sPct < 0.005) continue;
+        const ratio = uPct>0 ? sPct/uPct : null;
+        allShifts.push({feat:f, value:v, sN, sPct, uPct, ratio, absShift: Math.abs(sPct-uPct)});
+      }
+    }
+    allShifts.sort((a,b)=>b.absShift - a.absShift);
+    const top = allShifts.slice(0, 18);
+    const stbody = document.querySelector('#uci-shift-table tbody'); stbody.innerHTML='';
+    for(const s of top) {
+      const ratioStr = s.ratio==null ? '—' : `${s.ratio.toFixed(2)}×`;
+      const ratioColor = s.ratio==null ? 'var(--text-secondary)' : (s.ratio>1.2 ? 'var(--positive)' : (s.ratio<0.8 ? 'var(--negative)' : 'var(--text-primary)'));
+      stbody.innerHTML += `<tr>
+        <td>${s.feat}</td><td><strong>${s.value}</strong></td>
+        <td>${(s.sPct*100).toFixed(2)}%</td>
+        <td>${(s.uPct*100).toFixed(2)}%</td>
+        <td style="color:${ratioColor};font-weight:600">${ratioStr}</td>
+        <td>${fmtInt(s.sN)}</td>
+      </tr>`;
+    }
+    /* Distribution shift KL: average across categorical features */
+    let klSum = 0, klN = 0;
+    for(const f of catFeatures) {
+      const refF = ref.categorical[f]; if(!refF) continue;
+      const subF = {};
+      for(const r of data) { const v = r[f]; if(v==null||v==='') continue; if(!subF[v]) subF[v]={n:0}; subF[v].n++;}
+      let kl = 0;
+      const all = new Set([...Object.keys(refF), ...Object.keys(subF)]);
+      for(const v of all) {
+        const p = (subF[v]?.n || 0) / Math.max(1,subN); // subset distribution
+        const q = refF[v]?.pct || 0; // UCI distribution
+        if(p>0 && q>0) kl += p * Math.log(p/q);
+      }
+      klSum += kl; klN++;
+    }
+    document.getElementById('uci-kl').textContent = klN>0 ? (klSum/klN).toFixed(3) : '—';
+  }
+
+  /* ============================================================
+   *  CONTINUOUS PAIRS VIEW
+   * ============================================================ */
+  renderContinuousPairs() {
+    const x = sval('cp-x', true), y = sval('cp-y', true);
+    if(!x || !y) return;
+    const bins = parseInt(document.getElementById('cp-bins').value, 10);
+    const sampleN = parseInt(document.getElementById('cp-sample').value, 10);
+    const data = this.filteredData;
+    document.getElementById('cp-scatter-title').innerHTML = `Scatter — ${varInline(x)} vs ${varInline(y)}, colored by class`;
+    document.getElementById('cp-heatmap-title').innerHTML = `2D heatmap — conversion rate · ${varInline(x)} × ${varInline(y)}`;
+    document.getElementById('cp-trend-title').innerHTML = `Binned trend — ${varInline(x)} → mean ${varInline(y)} & conv. rate`;
+    /* gather valid pairs */
+    const validRows = data.filter(r => r[x]!=null && r[y]!=null && !isNaN(r[x]) && !isNaN(r[y]));
+    document.getElementById('cp-summary').textContent = `${validRows.length.toLocaleString()} valid pairs`;
+    if(validRows.length === 0) return;
+    /* sample for scatter */
+    let scatterRows = validRows;
+    if(sampleN>0 && validRows.length>sampleN) {
+      scatterRows = [];
+      const step = validRows.length/sampleN;
+      for(let i=0;i<sampleN;i++) scatterRows.push(validRows[Math.floor(i*step)]);
+    }
+    const yesPts = scatterRows.filter(r=>r.y==='yes').map(r=>({x:Number(r[x]), y:Number(r[y])}));
+    const noPts  = scatterRows.filter(r=>r.y==='no').map(r=>({x:Number(r[x]), y:Number(r[y])}));
+    this.upsertChart('ch-cp-scatter','scatter',{
+      datasets: [
+        {label:'no', data:noPts, backgroundColor:'rgba(231,111,81,0.35)', pointRadius:2.5, pointHoverRadius:5},
+        {label:'yes', data:yesPts, backgroundColor:'rgba(42,157,143,0.55)', pointRadius:2.5, pointHoverRadius:5},
+      ]
+    },{
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: (${fmtNum(c.parsed.x)}, ${fmtNum(c.parsed.y)})`}}},
+      scales:{x:{title:{display:true,text:x}, beginAtZero:false}, y:{title:{display:true,text:y}, beginAtZero:false}}
+    });
+    /* correlations */
+    const xs = validRows.map(r=>Number(r[x])), ys = validRows.map(r=>Number(r[y]));
+    const r = pearson(xs, ys);
+    document.getElementById('cp-corr').textContent = r.toFixed(3);
+    document.getElementById('cp-corr').style.color = r>=0 ? '#2a9d8f' : '#e76f51';
+    const rabs = Math.abs(r);
+    const cat = rabs>0.7?'strong': rabs>0.4?'moderate': rabs>0.2?'weak':'negligible';
+    document.getElementById('cp-corr-desc').textContent = `${cat} ${r>=0?'positive':'negative'} linear relationship · n=${validRows.length.toLocaleString()}`;
+    /* per-class */
+    const yesRows = validRows.filter(r=>r.y==='yes'), noRows = validRows.filter(r=>r.y==='no');
+    const ry = yesRows.length>1 ? pearson(yesRows.map(r=>+r[x]), yesRows.map(r=>+r[y])) : 0;
+    const rn = noRows.length>1 ? pearson(noRows.map(r=>+r[x]), noRows.map(r=>+r[y])) : 0;
+    document.getElementById('cp-class-corr').innerHTML =
+      `<tr><td><span class="tag tag-yes">yes</span></td><td>${fmtInt(yesRows.length)}</td><td style="font-weight:600;color:${ry>=0?'#2a9d8f':'#e76f51'}">${ry.toFixed(3)}</td></tr>` +
+      `<tr><td><span class="tag tag-no">no</span></td><td>${fmtInt(noRows.length)}</td><td style="font-weight:600;color:${rn>=0?'#2a9d8f':'#e76f51'}">${rn.toFixed(3)}</td></tr>`;
+    /* 2D heatmap — bin both axes, shade by conv rate */
+    const xVals = xs, yVals = ys;
+    let xLo = Math.min(...xVals), xHi = Math.max(...xVals);
+    let yLo = Math.min(...yVals), yHi = Math.max(...yVals);
+    /* clip top 1% of each axis to avoid outliers dominating bins */
+    const sortedX = [...xVals].sort((a,b)=>a-b);
+    const sortedY = [...yVals].sort((a,b)=>a-b);
+    xHi = sortedX[Math.floor(sortedX.length*0.99)];
+    yHi = sortedY[Math.floor(sortedY.length*0.99)];
+    xLo = sortedX[Math.floor(sortedX.length*0.01)];
+    yLo = sortedY[Math.floor(sortedY.length*0.01)];
+    const xW = (xHi-xLo)/bins || 1, yW = (yHi-yLo)/bins || 1;
+    const grid = []; for(let i=0;i<bins;i++) { grid.push([]); for(let j=0;j<bins;j++) grid[i].push({n:0, yes:0});}
+    for(const row of validRows) {
+      const xv = +row[x], yv = +row[y];
+      if(xv<xLo || xv>xHi || yv<yLo || yv>yHi) continue;
+      let xi = Math.min(bins-1, Math.max(0, Math.floor((xv-xLo)/xW)));
+      let yi = Math.min(bins-1, Math.max(0, Math.floor((yv-yLo)/yW)));
+      grid[bins-1-yi][xi].n++;
+      if(row.y==='yes') grid[bins-1-yi][xi].yes++;
+    }
+    const baseline = validRows.filter(r=>r.y==='yes').length/validRows.length;
+    let html = '<table class="heatgrid-table"><thead><tr><th></th>';
+    for(let j=0;j<bins;j++) html += `<th>${fmtNum(xLo + j*xW)}</th>`;
+    html += '</tr></thead><tbody>';
+    for(let i=0;i<bins;i++) {
+      const yLabel = fmtNum(yLo + (bins-1-i)*yW);
+      html += `<tr><th style="text-align:right;color:#6c757d;font-weight:500">${yLabel}</th>`;
+      for(let j=0;j<bins;j++) {
+        const cell = grid[i][j];
+        if(cell.n<5) { html += '<td class="empty"></td>'; continue;}
+        const rate = cell.yes/cell.n;
+        const dev = rate-baseline;
+        const norm = Math.max(-1, Math.min(1, dev/Math.max(0.01, baseline)));
+        const bg = norm>=0 ? `rgba(42,157,143,${0.18+norm*0.75})` : `rgba(231,111,81,${0.18+(-norm)*0.75})`;
+        const color = Math.abs(norm)>0.55 ? 'white' : '#1c1f26';
+        const tip = `${x}: ${fmtNum(xLo+j*xW)} – ${fmtNum(xLo+(j+1)*xW)}\n${y}: ${fmtNum(yLo+(bins-1-i)*yW)} – ${fmtNum(yLo+(bins-i)*yW)}\nconv. rate: ${(rate*100).toFixed(1)}%\nn = ${cell.n}`;
+        html += `<td style="background:${bg};color:${color}" title="${tip}">${(rate*100).toFixed(0)}%</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('cp-heatmap').innerHTML = html;
+    /* Trend line: bin X, show mean Y + conv rate */
+    const xBuckets = []; for(let i=0;i<bins;i++) xBuckets.push({n:0, yes:0, ySum:0, yMid: xLo + (i+0.5)*xW});
+    for(const row of validRows) {
+      const xv = +row[x]; if(xv<xLo || xv>xHi) continue;
+      let xi = Math.min(bins-1, Math.max(0, Math.floor((xv-xLo)/xW)));
+      xBuckets[xi].n++; if(row.y==='yes') xBuckets[xi].yes++;
+      xBuckets[xi].ySum += +row[y];
+    }
+    const tLabels = xBuckets.map(b=>fmtNum(b.yMid));
+    const tMeanY = xBuckets.map(b=>b.n>0?b.ySum/b.n:null);
+    const tRate  = xBuckets.map(b=>b.n>0?(b.yes/b.n*100):null);
+    const tCount = xBuckets.map(b=>b.n);
+    this.upsertChart('ch-cp-trend','bar',{
+      labels: tLabels, datasets:[
+        {type:'bar', label:'count', data:tCount, backgroundColor:'#dee2e6', yAxisID:'y3', order:3, borderWidth:0},
+        {type:'line', label:`mean ${y}`, data:tMeanY, borderColor:'#4C72B0', backgroundColor:'#4C72B033', tension:0.25, yAxisID:'y2', pointRadius:3, order:1},
+        {type:'line', label:'conv. rate %', data:tRate, borderColor:'#2a9d8f', backgroundColor:'#2a9d8f33', borderDash:[5,3], tension:0.25, yAxisID:'y', pointRadius:3, order:2},
+      ]
+    },{
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:c=>{
+        if(c.dataset.label.startsWith('mean')) return `mean ${y}: ${fmtNum(c.parsed.y)}`;
+        if(c.dataset.label.startsWith('conv')) return `conv. rate: ${c.parsed.y==null?'—':c.parsed.y.toFixed(1)+'%'}`;
+        return `count: ${fmtInt(c.parsed.y)}`;
+      }}}},
+      scales:{
+        y:{position:'right', beginAtZero:true, ticks:{callback:v=>v+'%'}, title:{display:true,text:'Conv %'}, grid:{drawOnChartArea:false}},
+        y2:{position:'left', beginAtZero:false, title:{display:true,text:`mean ${y}`}},
+        y3:{display:false, beginAtZero:true},
+        x:{title:{display:true,text:x}, ticks:{maxTicksLimit:12}}
+      }
+    });
+  }
+
+  /* ---------- chart helper ---------- */
+  upsertChart(canvasId, type, data, opts={}) {
+    const ctx = document.getElementById(canvasId); if(!ctx) return;
+    if(this.charts[canvasId]) { this.charts[canvasId].destroy(); }
+    const baseOpts = {responsive:true, maintainAspectRatio:false, animation:{duration:300}, ...opts};
+    this.charts[canvasId] = new Chart(ctx.getContext('2d'), {type, data, options: baseOpts});
+  }
+
+  /* ---------- export PNG ---------- */
+  exportPNG() {
+    /* find the active view's first canvas and export it */
+    const view = document.querySelector('.view.active');
+    const canvas = view ? view.querySelector('canvas') : null;
+    if(!canvas) { alert('No chart in this view to export.'); return;}
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a'); a.href=url; a.download = `bank-${this.activeView}.png`; a.click();
+  }
+}
+
+/* ---------- helpers ---------- */
+function fillSelect(id, items, defaultV=null) {
+  const el = document.getElementById(id); if(!el) return;
+  el.innerHTML = '';
+  for(const it of items) {
+    const o = document.createElement('option'); o.value=it; o.textContent=it; el.appendChild(o);
+  }
+  if(defaultV) el.value = defaultV;
+}
+function sval(id, requireValue=false) {
+  const el = document.getElementById(id); if(!el) return null;
+  const v = el.value; if(v==='all') return null;
+  return v;
+}
+function renderStatsBlock(id, stats) {
+  const el = document.getElementById(id); if(!el) return;
+  el.innerHTML = '';
+  for(const [k,v] of Object.entries(stats)) {
+    const lab = document.createElement('div'); lab.className='stat-label'; lab.textContent = k;
+    const val = document.createElement('div'); val.className='stat-value'; val.textContent = v;
+    el.appendChild(lab); el.appendChild(val);
+  }
+}
+
+/* ---------- bootstrap ---------- */
+const dashboard = new Dashboard();
+window.dashboard = dashboard;
+dashboard.loadFromUrl();
+
+</script>
+</body>
+</html>
