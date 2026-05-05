@@ -6,20 +6,20 @@ My work for the CSE 450 class.
 
 This repository includes three command-line tools:
 
-1. `Tools/extractCSV.py` downloads a CSV from a URL and saves it locally with the same filename.
-2. `Tools/compareCSV.py` compares two CSV files, reports how similar they are, and can write derived CSV outputs.
-3. `notebook_to_py.py` converts a Jupyter notebook into a plain Python file.
+1. `tools/extractCSV.py` downloads a CSV from a URL and saves it locally with the same filename.
+2. `tools/compareCSV.py` compares two CSV files, reports how similar they are, and can write derived CSV outputs.
+3. `tools/notebook_to_py.py` converts a Jupyter notebook into a plain Python file.
 
 Run the commands from the repository root.
 
-## `Tools/extractCSV.py`
+## `tools/extractCSV.py`
 
 Downloads a web-based CSV file and saves it to a local directory using the same filename as the source URL.
 
 ### Usage
 
 ```bash
-python Tools/extractCSV.py <csv-url> [-d DESTINATION]
+python tools/extractCSV.py <csv-url> [-d DESTINATION]
 ```
 
 ### Arguments
@@ -35,13 +35,13 @@ python Tools/extractCSV.py <csv-url> [-d DESTINATION]
 Save a file in the current directory:
 
 ```bash
-python Tools/extractCSV.py https://example.com/data/sample.csv
+python tools/extractCSV.py https://example.com/data/sample.csv
 ```
 
 Save a file into a separate folder:
 
 ```bash
-python Tools/extractCSV.py https://example.com/data/sample.csv --destination downloads
+python tools/extractCSV.py https://example.com/data/sample.csv --destination downloads
 ```
 
 ### Behavior
@@ -50,7 +50,7 @@ python Tools/extractCSV.py https://example.com/data/sample.csv --destination dow
 - The file is written exactly once with the same name as the remote file.
 - If the URL path does not contain a filename, the script raises an error.
 
-## `Tools/compareCSV.py`
+## `tools/compareCSV.py`
 
 Compares two CSV files and prints how much data they share in both directions. It can also write derived CSVs for the sum, differences, intersection, and XOR of the rows.
 
@@ -65,7 +65,7 @@ The script is tolerant of small differences:
 ### Usage
 
 ```bash
-python Tools/compareCSV.py <csv-a> <csv-b> [options]
+python tools/compareCSV.py <csv-a> <csv-b> [options]
 ```
 
 ### Arguments
@@ -120,19 +120,19 @@ If the files do not use identical headers, the script also prints a header-align
 Compare two CSV files:
 
 ```bash
-python Tools/compareCSV.py data/a.csv data/b.csv
+python tools/compareCSV.py data/a.csv data/b.csv
 ```
 
 Compare two files with numeric tolerance and write the rows common to both:
 
 ```bash
-python Tools/compareCSV.py data/a.csv data/b.csv --numeric-tolerance 0.1 --and-out output/common.csv
+python tools/compareCSV.py data/a.csv data/b.csv --numeric-tolerance 0.1 --and-out output/common.csv
 ```
 
 Write every derived output in one run:
 
 ```bash
-python Tools/compareCSV.py data/a.csv data/b.csv \
+python tools/compareCSV.py data/a.csv data/b.csv \
 	--sum-out output/sum.csv \
 	--diff12-out output/a_minus_b.csv \
 	--diff21-out output/b_minus_a.csv \
