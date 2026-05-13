@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score
 from imblearn.over_sampling import SMOTE
-"""
+train_campaignData = pd.read_csv('https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv')
 train_campaignData['never_contacted'] = np.where(train_campaignData['pdays'] == 999, 1, 0)
 train_campaignData = train_campaignData.drop('pdays', axis=1)
 
@@ -18,7 +18,7 @@ training_column_names = X_train_encoded.columns
 le = LabelEncoder()
 y_train = le.fit_transform(train_campaignData['y'])
 
-model = RandomForestClassifier(max_depth=5, class_weight='balanced')
+model = RandomForestClassifier(max_depth=5, class_weight='{0: 1, 1: 1.5}')
 model.fit(X_train_encoded, y_train)
 
 new_df = pd.read_csv('https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank_holdout_test_mini.csv') 
@@ -54,10 +54,9 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_encoded,
     y,
     test_size=0.2,
-    random_state=42
 )
 
-smote = SMOTE(random_state=42)
+smote = SMOTE()
 
 X_train_resampled, y_train_resampled = smote.fit_resample(
     X_train,
@@ -68,7 +67,7 @@ refined_model = RandomForestClassifier(
     max_depth=5,
     min_samples_leaf=10,
     min_samples_split=20,
-    class_weight='balanced'
+    class_weight= {0: 1, 1: 1.5}
 )
 
 refined_model.fit(X_train_resampled, y_train_resampled)
@@ -89,3 +88,4 @@ print("\n--- TOP FEATURES ---")
 print(importances.sort_values(ascending=False).head(10))
 
 campaignData.to_csv('decision_tree_predictions.csv', index=False)
+"""
