@@ -40,16 +40,6 @@ new_df[['predicted_y']].to_csv('NorthWindModule2-predictions.csv', index=False)
 print(new_df.head())
 """
 
-import pandas as pd
-import numpy as np
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-
-from imblearn.over_sampling import SMOTE
-
 campaignData = pd.read_csv(
     'https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv'
 )
@@ -62,7 +52,7 @@ campaignData['never_contacted'] = np.where(
 
 campaignData = campaignData.drop('pdays', axis=1)
 
-X = campaignData.drop('y', axis=1)
+X = campaignData.drop(['y'], axis=1)
 
 X_encoded = pd.get_dummies(X, drop_first=True)
 
