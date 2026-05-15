@@ -1,0 +1,922 @@
+[
+  {
+    "model": "caleb",
+    "drops": [
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71646.28,
+      71863.34
+    ],
+    "per_seed_correct": [
+      2927,
+      2931
+    ],
+    "per_seed_wasted": [
+      7803,
+      7792
+    ],
+    "mean_total_value": 71754.81,
+    "std_total_value": 153.48459792435037,
+    "per_row_value": 1.935709352828509,
+    "scaled_410_value": 793.6408346596887,
+    "label": "caleb_baseline_noMonth"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "age"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71167.66,
+      71374.48000000001
+    ],
+    "per_seed_correct": [
+      2944,
+      2932
+    ],
+    "per_seed_wasted": [
+      8011,
+      7888
+    ],
+    "mean_total_value": 71271.07,
+    "std_total_value": 146.24382448500668,
+    "per_row_value": 1.9226596347352236,
+    "scaled_410_value": 788.2904502414417,
+    "label": "caleb_drop_age"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "campaign",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71033.48000000001,
+      71733.0
+    ],
+    "per_seed_correct": [
+      2932,
+      2925
+    ],
+    "per_seed_wasted": [
+      7950,
+      7773
+    ],
+    "mean_total_value": 71383.24,
+    "std_total_value": 494.6353355756063,
+    "per_row_value": 1.9256856133157088,
+    "scaled_410_value": 789.5311014594406,
+    "label": "caleb_drop_campaign"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "age"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71167.66,
+      71374.48000000001
+    ],
+    "per_seed_correct": [
+      2944,
+      2932
+    ],
+    "per_seed_wasted": [
+      8011,
+      7888
+    ],
+    "mean_total_value": 71271.07,
+    "std_total_value": 146.24382448500668,
+    "per_row_value": 1.9226596347352236,
+    "scaled_410_value": 788.2904502414417,
+    "label": "caleb_drop_age"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "age",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71167.66,
+      71374.48000000001
+    ],
+    "per_seed_correct": [
+      2944,
+      2932
+    ],
+    "per_seed_wasted": [
+      8011,
+      7888
+    ],
+    "mean_total_value": 71271.07,
+    "std_total_value": 146.24382448500668,
+    "per_row_value": 1.9226596347352236,
+    "scaled_410_value": 788.2904502414417,
+    "label": "caleb_drop_age"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "age"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71167.66,
+      71374.48000000001
+    ],
+    "per_seed_correct": [
+      2944,
+      2932
+    ],
+    "per_seed_wasted": [
+      8011,
+      7888
+    ],
+    "mean_total_value": 71271.07,
+    "std_total_value": 146.24382448500668,
+    "per_row_value": 1.9226596347352236,
+    "scaled_410_value": 788.2904502414417,
+    "label": "caleb_drop_age"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "campaign",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71033.48000000001,
+      71733.0
+    ],
+    "per_seed_correct": [
+      2932,
+      2925
+    ],
+    "per_seed_wasted": [
+      7950,
+      7773
+    ],
+    "mean_total_value": 71383.24,
+    "std_total_value": 494.6353355756063,
+    "per_row_value": 1.9256856133157088,
+    "scaled_410_value": 789.5311014594406,
+    "label": "caleb_drop_campaign"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "pdays",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71646.28,
+      71863.34
+    ],
+    "per_seed_correct": [
+      2927,
+      2931
+    ],
+    "per_seed_wasted": [
+      7803,
+      7792
+    ],
+    "mean_total_value": 71754.81,
+    "std_total_value": 153.48459792435037,
+    "per_row_value": 1.935709352828509,
+    "scaled_410_value": 793.6408346596887,
+    "label": "caleb_drop_pdays"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "campaign"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71033.48000000001,
+      71733.0
+    ],
+    "per_seed_correct": [
+      2932,
+      2925
+    ],
+    "per_seed_wasted": [
+      7950,
+      7773
+    ],
+    "mean_total_value": 71383.24,
+    "std_total_value": 494.6353355756063,
+    "per_row_value": 1.9256856133157088,
+    "scaled_410_value": 789.5311014594406,
+    "label": "caleb_drop_campaign"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "pdays",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71646.28,
+      71863.34
+    ],
+    "per_seed_correct": [
+      2927,
+      2931
+    ],
+    "per_seed_wasted": [
+      7803,
+      7792
+    ],
+    "mean_total_value": 71754.81,
+    "std_total_value": 153.48459792435037,
+    "per_row_value": 1.935709352828509,
+    "scaled_410_value": 793.6408346596887,
+    "label": "caleb_drop_pdays"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "previous"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71754.23999999999,
+      71675.06
+    ],
+    "per_seed_correct": [
+      2941,
+      2929
+    ],
+    "per_seed_wasted": [
+      7883,
+      7812
+    ],
+    "mean_total_value": 71714.65,
+    "std_total_value": 55.98871493434589,
+    "per_row_value": 1.9346259677897972,
+    "scaled_410_value": 793.1966467938169,
+    "label": "caleb_drop_previous"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "emp.var.rate",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71967.32,
+      71647.68000000001
+    ],
+    "per_seed_correct": [
+      2913,
+      2912
+    ],
+    "per_seed_wasted": [
+      7645,
+      7696
+    ],
+    "mean_total_value": 71807.5,
+    "std_total_value": 226.01961153846764,
+    "per_row_value": 1.9371307561574362,
+    "scaled_410_value": 794.2236100245489,
+    "label": "caleb_drop_emp.var.rate"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "cons.price.idx"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71467.98000000001,
+      71453.78
+    ],
+    "per_seed_correct": [
+      2932,
+      2927
+    ],
+    "per_seed_wasted": [
+      7871,
+      7838
+    ],
+    "mean_total_value": 71460.88,
+    "std_total_value": 10.040916292857206,
+    "per_row_value": 1.9277800857859668,
+    "scaled_410_value": 790.3898351722464,
+    "label": "caleb_drop_cons.price.idx"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "cons.conf.idx"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71876.0,
+      71854.76000000001
+    ],
+    "per_seed_correct": [
+      2925,
+      2909
+    ],
+    "per_seed_wasted": [
+      7747,
+      7637
+    ],
+    "mean_total_value": 71865.38,
+    "std_total_value": 15.018948032395684,
+    "per_row_value": 1.938692168658448,
+    "scaled_410_value": 794.8637891499636,
+    "label": "caleb_drop_cons.conf.idx"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "euribor3m"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71331.88,
+      71778.66
+    ],
+    "per_seed_correct": [
+      2917,
+      2919
+    ],
+    "per_seed_wasted": [
+      7789,
+      7722
+    ],
+    "mean_total_value": 71555.27,
+    "std_total_value": 315.92116769852487,
+    "per_row_value": 1.9303264183010063,
+    "scaled_410_value": 791.4338315034125,
+    "label": "caleb_drop_euribor3m"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "nr.employed",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71727.0,
+      71558.28
+    ],
+    "per_seed_correct": [
+      2950,
+      2927
+    ],
+    "per_seed_wasted": [
+      7952,
+      7819
+    ],
+    "mean_total_value": 71642.64,
+    "std_total_value": 119.30305612179512,
+    "per_row_value": 1.9326833742480238,
+    "scaled_410_value": 792.4001834416898,
+    "label": "caleb_drop_nr.employed"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "job",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71998.28,
+      72556.22
+    ],
+    "per_seed_correct": [
+      2927,
+      2948
+    ],
+    "per_seed_wasted": [
+      7739,
+      7787
+    ],
+    "mean_total_value": 72277.25,
+    "std_total_value": 394.523157495224,
+    "per_row_value": 1.9498030699506326,
+    "scaled_410_value": 799.4192586797593,
+    "label": "caleb_drop_job"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "marital"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71786.98,
+      71654.34
+    ],
+    "per_seed_correct": [
+      2932,
+      2931
+    ],
+    "per_seed_wasted": [
+      7813,
+      7830
+    ],
+    "mean_total_value": 71720.66,
+    "std_total_value": 93.79064345658325,
+    "per_row_value": 1.934788097871537,
+    "scaled_410_value": 793.2631201273302,
+    "label": "caleb_drop_marital"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "education"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71418.22,
+      71726.36
+    ],
+    "per_seed_correct": [
+      2923,
+      2949
+    ],
+    "per_seed_wasted": [
+      7816,
+      7945
+    ],
+    "mean_total_value": 71572.29000000001,
+    "std_total_value": 217.88788355482234,
+    "per_row_value": 1.9307855620599426,
+    "scaled_410_value": 791.6220804445765,
+    "label": "caleb_drop_education"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "default"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      70118.95999999999,
+      70970.8
+    ],
+    "per_seed_correct": [
+      2964,
+      2920
+    ],
+    "per_seed_wasted": [
+      8344,
+      7876
+    ],
+    "mean_total_value": 70544.88,
+    "std_total_value": 602.3418404859565,
+    "per_row_value": 1.9030694110982223,
+    "scaled_410_value": 780.2584585502711,
+    "label": "caleb_drop_default"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "housing",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71935.86,
+      71866.02
+    ],
+    "per_seed_correct": [
+      2924,
+      2918
+    ],
+    "per_seed_wasted": [
+      7729,
+      7699
+    ],
+    "mean_total_value": 71900.94,
+    "std_total_value": 49.38433759806601,
+    "per_row_value": 1.939651460789339,
+    "scaled_410_value": 795.257098923629,
+    "label": "caleb_drop_housing"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "loan",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71968.48000000001,
+      71643.72
+    ],
+    "per_seed_correct": [
+      2932,
+      2923
+    ],
+    "per_seed_wasted": [
+      7780,
+      7775
+    ],
+    "mean_total_value": 71806.1,
+    "std_total_value": 229.63999825814977,
+    "per_row_value": 1.9370929887507082,
+    "scaled_410_value": 794.2081253877903,
+    "label": "caleb_drop_loan"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "contact",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71482.29999999999,
+      71494.2
+    ],
+    "per_seed_correct": [
+      2920,
+      2930
+    ],
+    "per_seed_wasted": [
+      7783,
+      7852
+    ],
+    "mean_total_value": 71488.25,
+    "std_total_value": 8.414570696126088,
+    "per_row_value": 1.928518438587499,
+    "scaled_410_value": 790.6925598208745,
+    "label": "caleb_drop_contact"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "day_of_week"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      72657.26000000001,
+      72062.1
+    ],
+    "per_seed_correct": [
+      2934,
+      2915
+    ],
+    "per_seed_wasted": [
+      7669,
+      7642
+    ],
+    "mean_total_value": 72359.68000000001,
+    "std_total_value": 420.8416718909881,
+    "per_row_value": 1.952026760905339,
+    "scaled_410_value": 800.330971971189,
+    "label": "caleb_drop_day_of_week"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "poutcome",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71646.28,
+      71863.34
+    ],
+    "per_seed_correct": [
+      2927,
+      2931
+    ],
+    "per_seed_wasted": [
+      7803,
+      7792
+    ],
+    "mean_total_value": 71754.81,
+    "std_total_value": 153.48459792435037,
+    "per_row_value": 1.935709352828509,
+    "scaled_410_value": 793.6408346596887,
+    "label": "caleb_drop_poutcome"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month",
+      "job",
+      "day_of_week"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      72876.62,
+      73192.18
+    ],
+    "per_seed_correct": [
+      2933,
+      2962
+    ],
+    "per_seed_wasted": [
+      7622,
+      7771
+    ],
+    "mean_total_value": 73034.4,
+    "std_total_value": 223.1346158712253,
+    "per_row_value": 1.9702284928107041,
+    "scaled_410_value": 807.7936820523887,
+    "label": "caleb_slim_dropDayJob"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "loan",
+      "job",
+      "housing",
+      "month",
+      "day_of_week"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      72515.04000000001,
+      72659.32
+    ],
+    "per_seed_correct": [
+      2961,
+      2963
+    ],
+    "per_seed_wasted": [
+      7887,
+      7875
+    ],
+    "mean_total_value": 72587.18000000001,
+    "std_total_value": 102.02136638959425,
+    "per_row_value": 1.958163964498638,
+    "scaled_410_value": 802.8472254444415,
+    "label": "caleb_slim_drop4noise"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "day_of_week",
+      "month",
+      "job"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7,
+      123
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      72876.62,
+      73192.18,
+      73607.74
+    ],
+    "per_seed_correct": [
+      2933,
+      2962,
+      2941
+    ],
+    "per_seed_wasted": [
+      7622,
+      7771,
+      7546
+    ],
+    "mean_total_value": 73225.51333333332,
+    "std_total_value": 366.69803235542076,
+    "per_row_value": 1.975384103518663,
+    "scaled_410_value": 809.9074824426518,
+    "label": "caleb_slim_dropDayJob_s3"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7,
+      123
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71646.28,
+      71863.34,
+      72393.64
+    ],
+    "per_seed_correct": [
+      2927,
+      2931,
+      2926
+    ],
+    "per_seed_wasted": [
+      7803,
+      7792,
+      7660
+    ],
+    "mean_total_value": 71967.75333333334,
+    "std_total_value": 384.4650186081093,
+    "per_row_value": 1.9414538653142341,
+    "scaled_410_value": 795.996084778836,
+    "label": "caleb_baseline_noMonth_s3"
+  },
+  {
+    "model": "caleb",
+    "drops": [
+      "loan",
+      "housing",
+      "default",
+      "marital",
+      "job",
+      "month",
+      "education"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42,
+      7,
+      123
+    ],
+    "n_total": 37069,
+    "per_seed_total_value": [
+      71941.01999999999,
+      71773.46,
+      72275.23999999999
+    ],
+    "per_seed_correct": [
+      3018,
+      3014,
+      3016
+    ],
+    "per_seed_wasted": [
+      8397,
+      8399,
+      8322
+    ],
+    "mean_total_value": 71996.57333333332,
+    "std_total_value": 255.46119418285411,
+    "per_row_value": 1.9422313343584483,
+    "scaled_410_value": 796.3148470869638,
+    "label": "caleb_drop_demoBundle"
+  }
+]

@@ -1,0 +1,370 @@
+[
+  {
+    "model": "nels",
+    "drops": [
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13624.46
+    ],
+    "per_seed_correct": [
+      414
+    ],
+    "per_seed_wasted": [
+      469
+    ],
+    "mean_total_value": 13624.46,
+    "std_total_value": 0.0,
+    "per_row_value": 1.7030575,
+    "scaled_410_value": 698.253575,
+    "label": "nels_baseline_8k"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      7
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13323.62
+    ],
+    "per_seed_correct": [
+      408
+    ],
+    "per_seed_wasted": [
+      481
+    ],
+    "mean_total_value": 13323.62,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6654525,
+    "scaled_410_value": 682.835525,
+    "label": "nels_baseline_8k_s7"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      123
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13291.26
+    ],
+    "per_seed_correct": [
+      409
+    ],
+    "per_seed_wasted": [
+      494
+    ],
+    "mean_total_value": 13291.26,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6614075,
+    "scaled_410_value": 681.177075,
+    "label": "nels_baseline_8k_s123"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month",
+      "day_of_week"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13342.039999999999
+    ],
+    "per_seed_correct": [
+      411
+    ],
+    "per_seed_wasted": [
+      499
+    ],
+    "mean_total_value": 13342.039999999999,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6677549999999999,
+    "scaled_410_value": 683.77955,
+    "label": "nels_drop_day_of_week_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month",
+      "day_of_week"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13342.039999999999
+    ],
+    "per_seed_correct": [
+      411
+    ],
+    "per_seed_wasted": [
+      499
+    ],
+    "mean_total_value": 13342.039999999999,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6677549999999999,
+    "scaled_410_value": 683.77955,
+    "label": "nels_drop_day_of_week_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month",
+      "job"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13507.68
+    ],
+    "per_seed_correct": [
+      412
+    ],
+    "per_seed_wasted": [
+      476
+    ],
+    "mean_total_value": 13507.68,
+    "std_total_value": 0.0,
+    "per_row_value": 1.68846,
+    "scaled_410_value": 692.2686,
+    "label": "nels_drop_job_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "job",
+      "month"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13507.68
+    ],
+    "per_seed_correct": [
+      412
+    ],
+    "per_seed_wasted": [
+      476
+    ],
+    "mean_total_value": 13507.68,
+    "std_total_value": 0.0,
+    "per_row_value": 1.68846,
+    "scaled_410_value": 692.2686,
+    "label": "nels_drop_job_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "marital",
+      "loan",
+      "education",
+      "month",
+      "job",
+      "default",
+      "housing"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13765.8
+    ],
+    "per_seed_correct": [
+      420
+    ],
+    "per_seed_wasted": [
+      486
+    ],
+    "mean_total_value": 13765.8,
+    "std_total_value": 0.0,
+    "per_row_value": 1.7207249999999998,
+    "scaled_410_value": 705.4972499999999,
+    "label": "nels_drop_demoBundle_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month",
+      "education",
+      "marital",
+      "job",
+      "day_of_week",
+      "default",
+      "loan",
+      "housing"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13716.940000000002
+    ],
+    "per_seed_correct": [
+      421
+    ],
+    "per_seed_wasted": [
+      502
+    ],
+    "mean_total_value": 13716.940000000002,
+    "std_total_value": 0.0,
+    "per_row_value": 1.7146175000000003,
+    "scaled_410_value": 702.9931750000002,
+    "label": "nels_drop_DemoPlusDay_s42"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "month",
+      "housing",
+      "default",
+      "day_of_week",
+      "marital",
+      "job",
+      "education",
+      "loan"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      7
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13166.42
+    ],
+    "per_seed_correct": [
+      403
+    ],
+    "per_seed_wasted": [
+      474
+    ],
+    "mean_total_value": 13166.42,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6458025,
+    "scaled_410_value": 674.779025,
+    "label": "nels_drop_DemoPlusDay_s7"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "default",
+      "job",
+      "month",
+      "loan",
+      "housing",
+      "marital",
+      "education"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      7
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13828.22
+    ],
+    "per_seed_correct": [
+      423
+    ],
+    "per_seed_wasted": [
+      496
+    ],
+    "mean_total_value": 13828.22,
+    "std_total_value": 0.0,
+    "per_row_value": 1.7285275,
+    "scaled_410_value": 708.696275,
+    "label": "nels_drop_demoBundle_s7"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "education",
+      "marital",
+      "month",
+      "job",
+      "default",
+      "loan",
+      "housing"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      123
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13855.720000000001
+    ],
+    "per_seed_correct": [
+      423
+    ],
+    "per_seed_wasted": [
+      491
+    ],
+    "mean_total_value": 13855.720000000001,
+    "std_total_value": 0.0,
+    "per_row_value": 1.7319650000000002,
+    "scaled_410_value": 710.1056500000001,
+    "label": "nels_drop_demoBundle_s123"
+  },
+  {
+    "model": "nels",
+    "drops": [
+      "default",
+      "pdays",
+      "month",
+      "loan",
+      "housing",
+      "education",
+      "marital",
+      "job"
+    ],
+    "n_splits": 3,
+    "seeds": [
+      42
+    ],
+    "n_total": 8000,
+    "per_seed_total_value": [
+      13312.62
+    ],
+    "per_seed_correct": [
+      408
+    ],
+    "per_seed_wasted": [
+      483
+    ],
+    "mean_total_value": 13312.62,
+    "std_total_value": 0.0,
+    "per_row_value": 1.6640775,
+    "scaled_410_value": 682.271775,
+    "label": "nels_demoB_plus_pday_s42"
+  }
+]
