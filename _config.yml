@@ -1,0 +1,49 @@
+# =============================================================================
+# GitHub Pages Configuration — CSE 450 Machine Learning
+# =============================================================================
+
+# Theme
+theme: jekyll-theme-cayman
+
+# Site Metadata
+title: "CSE 450 — Machine Learning"
+description: >-
+  Collaborative machine learning coursework: classification pipelines,
+  exploratory data analysis, and predictive modeling for real-world datasets.
+author: "Nels Buhrley"
+baseurl: "/CSE-450-Machine-learning"
+url: "https://stepperanch.github.io"
+
+# Markdown Rendering
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+
+# Exclude build artifacts and non-documentation files from the rendered site
+exclude:
+  - "*.py"
+  - "*.csv"
+  - "*.ipynb"
+  - "*.pyc"
+  - "*.pyo"
+  - "*.pyd"
+  - "*.json"
+  - "*.log"
+  - "*.npz"
+  - __pycache__/
+  - .venv/
+  - venv/
+  - .vscode/
+  - .claude/
+  - bank-data/
+  - nels_b/
+  - caleb_d/
+  - dallin_w/
+  - jonathan_o/
+  - notebooks/

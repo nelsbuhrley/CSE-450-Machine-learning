@@ -5,8 +5,11 @@ __pycache__/
 .venv/
 venv/
 .vscode/
-__pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.log
+_site/
+.jekyll-cache/
+.jekyll-metadata
+Gemfile.lock
