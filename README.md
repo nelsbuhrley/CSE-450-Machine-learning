@@ -6,9 +6,9 @@ Repository for **Team NorthWind's** coursework in CSE 450 Machine Learning at BY
 
 ### Team Members
 
-<table>
+<table width="100%" class="team-table">
   <tr>
-    <td align="center">
+    <td align="center" width="25%">
       <a href="https://github.com/CalebDilley">
         <img src="https://github.com/CalebDilley.png" width="80" style="border-radius:50%;" alt="Caleb Dilley"/><br/>
         <sub><b>Caleb Dilley</b></sub>
