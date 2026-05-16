@@ -344,10 +344,15 @@ body {
     color: var(--tok-constant) !important;
 }
 
-.main-content table.team-table,
-.main-content table.team-table td {
+.main-content table.team-table {
+    width: 100% !important;
     border: none !important;
     box-shadow: none;
+    background: transparent;
+}
+
+.main-content table.team-table td {
+    border: none !important;
     background: transparent;
 }
 
@@ -440,7 +445,7 @@ body {
     width: min(300px, calc(100vw - 20px));
     border: 1px solid var(--line-strong);
     border-radius: 14px;
-    padding: 0.78rem;
+    padding: 0;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     backdrop-filter: blur(12px);
     box-shadow: var(--shadow-card);
@@ -453,7 +458,8 @@ body {
     transition:
         opacity 170ms ease,
         transform 170ms ease,
-        max-height 170ms ease;
+        max-height 170ms ease,
+        padding 170ms ease;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -463,6 +469,7 @@ body {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
+    padding: 0.78rem;
     max-height: min(calc(100vh - 54px), 600px);
     overflow-y: auto;
 }
