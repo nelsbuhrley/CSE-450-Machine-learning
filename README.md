@@ -1,177 +1,78 @@
-# CSE-450-Machine-learning
+# CSE 450 - Machine Learning
 
-My work for the CSE 450 class.
+Repository for **Team NorthWind's** coursework in CSE 450 Machine Learning at BYU-Idaho.
 
-## Tools
+---
 
-This repository includes three command-line tools:
+### Team Members
 
-1. `Tools/extractCSV.py` downloads a CSV from a URL and saves it locally with the same filename.
-2. `compareCSV.py` compares two CSV files, reports how similar they are, and then walks you through a terminal menu for derived CSV outputs.
-3. `notebook_to_py.py` converts a Jupyter notebook into a plain Python file.
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/CalebDilley">
+        <img src="https://github.com/CalebDilley.png" width="80" style="border-radius:50%;" alt="Caleb Dilley"/><br/>
+        <sub><b>Caleb Dilley</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Dallin-Wagner">
+        <img src="https://github.com/Dallin-Wagner.png" width="80" style="border-radius:50%;" alt="Dallin Wagner"/><br/>
+        <sub><b>Dallin Wagner</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/jonnboi13">
+        <img src="https://github.com/jonnboi13.png" width="80" style="border-radius:50%;" alt="Jonathan Oliphant"/><br/>
+        <sub><b>Jonathan Oliphant</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/nelsbuhrley">
+        <img src="https://github.com/nelsbuhrley.png" width="80" style="border-radius:50%;" alt="Nels Buhrley"/><br/>
+        <sub><b>Nels Buhrley</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-Run the commands from the repository root. If you are using the bundled virtual environment, replace `python` with `./.venv/bin/python`.
+---
 
-## `Tools/extractCSV.py`
+## Module 2 - Bank Marketing Prediction
 
-Downloads a web-based CSV file and saves it to a local directory using the same filename as the source URL.
+**Objective:** Predict which bank clients will subscribe to a term deposit, turning an unprofitable phone campaign into a profitable one.
 
-### Usage
+We built three classifiers on the [UCI Bank Marketing dataset](https://archive.ics.uci.edu/ml/datasets/bank+marketing) (37k records, 11.4% positive rate). The core challenge is class imbalance -- a model that always says "no" scores 89% accuracy but generates zero revenue. We tackled this with **SMOTE oversampling**, **class weighting**, and **probability threshold tuning**, evaluating models on business value rather than accuracy.
 
-```bash
-./.venv/bin/python Tools/extractCSV.py <csv-url> [-d DESTINATION]
+| Model | Technique | Key Idea |
+|-------|-----------|----------|
+| RF + SMOTE | Random Forest | Synthetic oversampling + manual class weights |
+| RF Balanced | Random Forest | Automatic balanced class weights |
+| Stacking (RF + KNN) | Ensemble stacking | RF and KNN base learners feed a logistic regression meta-learner; threshold tuned to 0.61 |
+
+### Highlights
+
+![Campaign Value](module_2-bank/visualisation/output/marketing/dark_bars/campaign_value.png)
+
+- **Without ML filtering:** the campaign loses money ($-157 on 410 test contacts)
+- **With our best model:** $824 profit on the same 410 contacts
+- **Projected at scale (4,119 contacts):** up to $7,775 in campaign value
+
+![Golden List / Black List](module_2-bank/visualisation/output/marketing/dark_bars/golden_blacklist.png)
+
+The models concentrate the call list on high-conversion groups (previously converted clients, students, retirees) and filter out low-yield contacts (landline-reached, blue-collar workers), boosting precision from 11.5% to 47.2%.
+
+> Full technical writeup, per-model breakdowns, and detailed results in [`module_2-bank/README.md`](module_2-bank/README.md).
+
+---
+
+## Repository Structure
+
 ```
-
-### Arguments
-
-`<csv-url>`
-: HTTP or HTTPS URL to the CSV file.
-
-`-d`, `--destination`
-: Directory where the file should be saved. The directory is created if it does not already exist. Defaults to the current directory.
-
-### Examples
-
-Save a file in the current directory:
-
-```bash
-./.venv/bin/python Tools/extractCSV.py https://example.com/data/sample.csv
+module_2-bank/       Bank marketing prediction project 
+tools/               Shared utility scripts
+notebooks/           Exploratory Jupyter notebooks
+nels_b/              Nels's working directory
+dallin_w/            Dallin's working directory
+caleb_d/             Caleb's working directory
+jonathan_o/          Jonathan's working directory
 ```
-
-Save a file into a separate folder:
-
-```bash
-./.venv/bin/python Tools/extractCSV.py https://example.com/data/sample.csv --destination downloads
-```
-
-### Behavior
-
-- The output filename is taken from the last path segment of the URL.
-- The file is written exactly once with the same name as the remote file.
-- If the URL path does not contain a filename, the script raises an error.
-
-## `compareCSV.py`
-
-Compares two CSV files and prints how much data they share in both directions. After the report, it opens a terminal menu so you can choose whether to write derived CSVs for the sum, differences, intersection, and XOR of the rows.
-
-The script is tolerant of small differences:
-
-- headers are compared case-insensitively after trimming whitespace
-- text values are compared case-insensitively unless you opt out
-- numeric values can be compared with a tolerance
-- rows are matched by normalized values instead of raw text
-- duplicate rows are handled correctly
-
-### Usage
-
-```bash
-./.venv/bin/python compareCSV.py <csv-a> <csv-b>
-```
-
-### Arguments
-
-`<csv-a>`
-: First CSV file.
-
-`<csv-b>`
-: Second CSV file.
-
-### Menu flow
-
-After you start the command, the script prompts for:
-
-1. numeric tolerance for comparisons
-2. whether text should be compared case-sensitively
-3. the delimiter to use for any generated output files
-4. which output files to create
-5. the output path for each selected file
-
-The menu choices are:
-
-1. sum / union of both files
-2. rows in the first file that are not in the second
-3. rows in the second file that are not in the first
-4. rows common to both files
-5. rows that appear in only one file
-6. create every output
-7. finish without writing more files
-
-### Output report
-
-The script always prints a two-line similarity summary unless it cannot compare the files.
-
-Example output:
-
-```text
-file1.csv shares 100.00% of its data with file2.csv (25/25 rows)
-file2.csv shares 96.15% of its data with file1.csv (25/26 rows)
-```
-
-If the files do not use identical headers, the script also prints a header-alignment note showing how many shared columns were compared.
-
-### Examples
-
-Compare two CSV files and exit after the similarity report:
-
-```bash
-./.venv/bin/python compareCSV.py data/a.csv data/b.csv
-```
-
-Create the common-row output from the menu after the report appears:
-
-```bash
-./.venv/bin/python compareCSV.py data/a.csv data/b.csv
-```
-
-Create every derived output by choosing menu option `6`:
-
-```bash
-./.venv/bin/python Tools/compareCSV.py data/a.csv data/b.csv
-```
-
-### Behavior
-
-- Rows are matched using normalized header names, so `Name` and `name` are treated as the same column.
-- Numeric values such as `1`, `1.0`, and `1.00` are treated as equivalent unless you set a tighter tolerance.
-- The generated CSVs keep the column order from the two input files, combined without duplicates.
-- If you request no output files, the script only prints the similarity summary.
-- The default output filenames use the two input file stems, but you can replace them when the menu asks for a path.
-
-## `notebook_to_py.py`
-
-Converts a Jupyter notebook into a `.py` file. Markdown cells become comment blocks and code cells stay as code.
-
-### Usage
-
-```bash
-./.venv/bin/python notebook_to_py.py <notebook.ipynb> [output.py]
-```
-
-### Arguments
-
-`<notebook.ipynb>`
-: Input notebook file.
-
-`[output.py]`
-: Optional destination Python file. If omitted, the script writes a `.py` file next to the notebook with the same base name.
-
-### Examples
-
-Convert a notebook in place to a Python file with the same base name:
-
-```bash
-./.venv/bin/python notebook_to_py.py notebooks/Exploration_01.ipynb
-```
-
-Convert a notebook and choose a custom output path:
-
-```bash
-./.venv/bin/python notebook_to_py.py notebooks/Exploration_01.ipynb notebooks/Exploration_01_export.py
-```
-
-### Behavior
-
-- The input file must end in `.ipynb`.
-- The script fails if the notebook does not exist.
-- Markdown text is converted into `#` comment lines in the output file.
-- Empty notebook cells are skipped.
