@@ -37,10 +37,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 smote = SMOTE(random_state=42)
 
-X_train_resampled, y_train_resampled = smote.fit_resample(
-    X_train,
-    y_train
-)
+X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train) # type: ignore
 
 refined_model = RandomForestClassifier(
     max_depth=5,
