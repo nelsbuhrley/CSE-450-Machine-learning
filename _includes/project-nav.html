@@ -1,0 +1,43 @@
+{%- comment -%}
+  Sub-navigation strip for project pages.
+
+  Required frontmatter on the page:
+    project:       <slug>            — e.g. module_2-bank
+    project_title: "<Display name>"  — e.g. "Module 2 · Bank Marketing"
+    page_type:     overview | summary | technical
+
+  This renders three tabs that link between the three sub-pages of a project,
+  highlighting whichever one matches `page_type`.
+{%- endcomment -%}
+
+{%- assign base = '/project_pages/' | append: page.project | append: '/' -%}
+
+<nav class="project-nav" aria-label="Project sections">
+  <div class="project-nav__brand">
+    <span class="project-nav__eyebrow">Project</span>
+    <span class="project-nav__title">{{ page.project_title }}</span>
+  </div>
+  <ul class="project-nav__tabs">
+    <li>
+      <a href="{{ base | relative_url }}"
+         class="project-nav__tab{% if page.page_type == 'overview' %} is-active{% endif %}"
+         {% if page.page_type == 'overview' %}aria-current="page"{% endif %}>
+        Overview
+      </a>
+    </li>
+    <li>
+      <a href="{{ base | append: 'summary/' | relative_url }}"
+         class="project-nav__tab{% if page.page_type == 'summary' %} is-active{% endif %}"
+         {% if page.page_type == 'summary' %}aria-current="page"{% endif %}>
+        Executive Summary
+      </a>
+    </li>
+    <li>
+      <a href="{{ base | append: 'technical/' | relative_url }}"
+         class="project-nav__tab{% if page.page_type == 'technical' %} is-active{% endif %}"
+         {% if page.page_type == 'technical' %}aria-current="page"{% endif %}>
+        Technical Deep-Dive
+      </a>
+    </li>
+  </ul>
+</nav>

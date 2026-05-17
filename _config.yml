@@ -36,6 +36,10 @@ exclude:
   - "*.json"
   - "*.log"
   - "*.npz"
+  - "*.tmp"
+  - "*.docx"
+  - "~$*"
+  - "*.docx alias"
   - __pycache__/
   - .venv/
   - venv/
