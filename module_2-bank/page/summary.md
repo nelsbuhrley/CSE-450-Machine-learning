@@ -4,7 +4,7 @@ title: "Module 2 · Bank Marketing — Executive Summary"
 project: module_2-bank
 project_title: "Module 2 · Bank Marketing"
 page_type: summary
-permalink: /project_pages/module_2-bank/summary/
+permalink: /module_2-bank/page/summary/
 ---
 
 {% include project-nav.html %}
@@ -14,10 +14,10 @@ permalink: /project_pages/module_2-bank/summary/
   <h1 class="exec-hero__title">Marketing Campaign Analysis</h1>
   <p class="exec-hero__subtitle">Prepared by North Wind Consulting</p>
   <div class="exec-hero__actions">
-    <a class="btn-pill" href="{{ '/project_pages/module_2-bank/assets/module_2-bank-executive-summary.pdf' | relative_url }}" download>
+    <a class="btn-pill" href="{{ '/module_2-bank/page/assets/module_2-bank-executive-summary.pdf' | relative_url }}" download>
       ⬇  Download PDF
     </a>
-    <a class="btn-pill btn-pill--ghost" href="{{ '/project_pages/module_2-bank/technical/' | relative_url }}">
+    <a class="btn-pill btn-pill--ghost" href="{{ '/module_2-bank/page/technical/' | relative_url }}">
       Technical Deep-Dive →
     </a>
   </div>
@@ -79,4 +79,4 @@ The best metric we currently have to target the value of a customer is how likel
 
 ---
 
-**Want the full methodology?** The [Technical Deep-Dive]({{ '/project_pages/module_2-bank/technical/' | relative_url }}) walks through the three candidate models, the cost-sensitive evaluation function, and the actual training code for each model.
+**Want the full methodology?** The [Technical Deep-Dive]({{ '/module_2-bank/page/technical/' | relative_url }}) walks through the three candidate models, the cost-sensitive evaluation function, and the actual training code for each model.

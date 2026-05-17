@@ -4,7 +4,7 @@ title: "Module 2 · Bank Marketing — Overview"
 project: module_2-bank
 project_title: "Module 2 · Bank Marketing"
 page_type: overview
-permalink: /project_pages/module_2-bank/
+permalink: /module_2-bank/page/
 ---
 
 {% include project-nav.html %}
@@ -53,4 +53,4 @@ All three of our models flip a money-losing campaign into a profitable one. On a
 
 ## Next
 
-See the **[Executive Summary]({{ '/project_pages/module_2-bank/summary/' | relative_url }})** for the stakeholder-facing version of these findings, or the **[Technical Deep-Dive]({{ '/project_pages/module_2-bank/technical/' | relative_url }})** for the pipeline, code, and evaluation methodology in detail.
+See the **[Executive Summary]({{ '/module_2-bank/page/summary/' | relative_url }})** for the stakeholder-facing version of these findings, or the **[Technical Deep-Dive]({{ '/module_2-bank/page/technical/' | relative_url }})** for the pipeline, code, and evaluation methodology in detail.

@@ -16,19 +16,18 @@ from what's in `module_2-bank`, treat that as the source of truth.
 For a project with slug `<slug>` (e.g. `module_3-foo`):
 
 ```
-project_pages/
-  <slug>/
-    index.md         → /project_pages/<slug>/             "Overview"
-    summary.md       → /project_pages/<slug>/summary/     "Executive Summary"
-    technical.md     → /project_pages/<slug>/technical/   "Technical Deep-Dive"
+<slug>/
+  page/
+    index.md         → /<slug>/page/             "Overview"
+    summary.md       → /<slug>/page/summary/     "Executive Summary"
+    technical.md     → /<slug>/page/technical/   "Technical Deep-Dive"
     assets/
       <slug>-executive-summary.pdf
 ```
 
-The raw project files (data, code, charts) stay in their own top-level folder
-at the repo root (e.g. `module_2-bank/`). The page files in `project_pages/`
-reference those assets via `relative_url`. This keeps the GitHub repo README
-intact and the Jekyll-rendered pages separate.
+The page files live inside the project's own top-level folder (e.g.
+`module_2-bank/page/`), alongside the raw data, code, and charts. This keeps
+everything for a project in one place.
 
 ## Required frontmatter
 
@@ -40,7 +39,7 @@ layout: default
 project: <slug>                # e.g. module_2-bank
 project_title: "Module 2 · Bank Marketing"
 page_type: overview            # or "summary" or "technical"
-permalink: /project_pages/<slug>/    # adjust path per page (see above)
+permalink: /<slug>/page/    # adjust path per page (see above)
 ```
 
 The `technical.md` page additionally needs `github_repo` and `github_branch`
@@ -124,10 +123,10 @@ For figure captions, use kramdown's block-attribute syntax to attach the
 
 ## Adding a new project — checklist
 
-1. Create `project_pages/<slug>/` and the three `.md` files above with the
+1. Create `<slug>/page/` and the three `.md` files above with the
    required frontmatter.
 2. Generate or copy the executive-summary PDF into
-   `project_pages/<slug>/assets/<slug>-executive-summary.pdf`.
+   `<slug>/page/assets/<slug>-executive-summary.pdf`.
 3. Make sure the project's image folder is **not** excluded by `_config.yml`.
    PNGs at `<slug>/visualisation/...` are served as-is.
 4. Optionally update the corner-menu nav in `ui/js/nav.js` if you want the
