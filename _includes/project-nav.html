@@ -27,14 +27,14 @@
       </a>
     </li>
     <li>
-      <a href="{{ base | append: 'summary/' | relative_url }}"
+      <a href="{{ page_base | append: 'summary/' | relative_url }}"
          class="project-nav__tab{% if page.page_type == 'summary' %} is-active{% endif %}"
          {% if page.page_type == 'summary' %}aria-current="page"{% endif %}>
         Executive Summary
       </a>
     </li>
     <li>
-      <a href="{{ base | append: 'technical/' | relative_url }}"
+      <a href="{{ page_base | append: 'technical/' | relative_url }}"
          class="project-nav__tab{% if page.page_type == 'technical' %} is-active{% endif %}"
          {% if page.page_type == 'technical' %}aria-current="page"{% endif %}>
         Technical Deep-Dive
