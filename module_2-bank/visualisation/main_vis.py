@@ -23,11 +23,13 @@ import marketing_plots
 HERE = Path(__file__).parent
 OUTPUT_DIR = HERE / "output"
 DETAILED_DIR = OUTPUT_DIR / "detailed"
+DETAILED_DARK_DIR = DETAILED_DIR / "dark"
 MARKETING_DIR = OUTPUT_DIR / "marketing"
 
 
 def main():
     DETAILED_DIR.mkdir(parents=True, exist_ok=True)
+    DETAILED_DARK_DIR.mkdir(parents=True, exist_ok=True)
 
     # ── run all analyses once ──
     print("Running analyses...")
@@ -48,12 +50,18 @@ def main():
         ("Campaign Analysis", campaign_analysis, campaign_data),
     ]
     for section_name, mod, data in modules_data:
-        figures = mod.make_figures(data)
+        figures = mod.make_figures(data, theme="light")
         for fig_name, fig in figures.items():
             path = DETAILED_DIR / f"{fig_name}.png"
             fig.savefig(path, dpi=150, bbox_inches="tight")
             plt.close(fig)
             print(f"  Saved: detailed/{fig_name}.png")
+        dark_figures = mod.make_figures(data, theme="dark")
+        for fig_name, fig in dark_figures.items():
+            path = DETAILED_DARK_DIR / f"{fig_name}.png"
+            fig.savefig(path, dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            print(f"  Saved: detailed/dark/{fig_name}.png")
         md_sections.append(mod.make_markdown(data))
 
     (DETAILED_DIR / "report.md").write_text("\n".join(md_sections))

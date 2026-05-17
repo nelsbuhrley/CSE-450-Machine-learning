@@ -11,19 +11,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+import detailed_theme as dt
+
 HERE = Path(__file__).parent
 ROOT = HERE.parent
 TRAIN_PATH = ROOT / "training_data" / "bank.csv"
 TEST_PATH = ROOT / "test_data" / "bank_holdout_test_mini.csv"
 ANSWERS_PATH = ROOT / "verification_data" / "bank_holdout_test_mini_answers.csv"
 PRED_DIR = ROOT / "predictions" / "mini-holdout"
-
-GREEN = "#2a9d8f"
-RED = "#e76f51"
-BLUE = "#4C72B0"
-ORANGE = "#DD8452"
-PURPLE = "#8172B3"
-GREY = "#aaaaaa"
 
 CATS = ["job", "marital", "education", "contact", "poutcome"]
 
@@ -95,8 +90,15 @@ def run_analysis() -> dict:
     }
 
 
-def make_figures(data: dict) -> dict[str, plt.Figure]:
+def make_figures(data: dict, theme: str = "light") -> dict[str, plt.Figure]:
     figs = {}
+    t = dt.get_theme(theme)
+    GREEN = t["good"]
+    RED = t["bad"]
+    BLUE = t["blue"]
+    ORANGE = t["orange"]
+    PURPLE = t["purple"]
+    GREY = t["neutral"]
 
     # --- Fig 1: group profiles ---
     baseline = data["baseline_rate"]
@@ -115,7 +117,8 @@ def make_figures(data: dict) -> dict[str, plt.Figure]:
     ax_top.set_xlim(0, max(rates_t) * 1.25)
     ax_top.set_xlabel("Conversion rate (%)")
     ax_top.set_title("Top 3 most likely to subscribe", fontsize=13, fontweight="bold", color=GREEN)
-    ax_top.legend(fontsize=9)
+    legend_top = ax_top.legend(fontsize=9)
+    dt.style_legend(legend_top, t)
     ax_top.spines[["top", "right"]].set_visible(False)
 
     labels_b = [f"{r['feature']}: {r['value']}\n(n={r['n']:,})" for r in bot3]
@@ -128,10 +131,15 @@ def make_figures(data: dict) -> dict[str, plt.Figure]:
     ax_bot.set_xlim(0, baseline * 100 * 1.6)
     ax_bot.set_xlabel("Conversion rate (%)")
     ax_bot.set_title("Top 3 least likely to subscribe", fontsize=13, fontweight="bold", color=RED)
-    ax_bot.legend(fontsize=9)
+    legend_bot = ax_bot.legend(fontsize=9)
+    dt.style_legend(legend_bot, t)
     ax_bot.spines[["top", "right"]].set_visible(False)
 
-    fig.suptitle("Who says YES and who says NO?  (training data, n >= 30)", fontsize=14, fontweight="bold", y=1.02)
+    fig.suptitle("Who says YES and who says NO?  (training data, n >= 30)", fontsize=14,
+                 fontweight="bold", y=1.02, color=t["text_bold"])
+    dt.apply_figure(fig, t)
+    dt.apply_axes(ax_top, t)
+    dt.apply_axes(ax_bot, t)
     fig.tight_layout()
     figs["group_profiles"] = fig
 
@@ -156,7 +164,7 @@ def make_figures(data: dict) -> dict[str, plt.Figure]:
                label=MODEL_SHORT_NAMES.get(key, key), color=colors[i % len(colors)],
                edgecolor="white", zorder=3)
 
-    ax.axvline(2.5, color="#cccccc", linestyle="-", linewidth=1.5, zorder=1)
+    ax.axvline(2.5, color=t["grid"], linestyle="-", linewidth=1.5, zorder=1)
     ylim = ax.get_ylim()[1] if ax.get_ylim()[1] > 0 else 30
     ax.text(1.0, ylim, "HIGH conversion", ha="center", fontsize=10, fontweight="bold", color=GREEN, style="italic")
     ax.text(4.5, ylim, "LOW conversion", ha="center", fontsize=10, fontweight="bold", color=RED, style="italic")
@@ -164,12 +172,15 @@ def make_figures(data: dict) -> dict[str, plt.Figure]:
     ax.set_xticklabels(group_labels, rotation=30, ha="right", fontsize=10)
     ax.set_ylabel("% of people called", fontsize=11)
     ax.set_title("Model filtering: proportion of key groups in call list vs calling everyone\n(mini-holdout)",
-                 fontsize=13, fontweight="bold")
-    ax.legend(loc="upper right", fontsize=9, framealpha=0.9)
+                 fontsize=13, fontweight="bold", color=t["text_bold"])
+    legend_filter = ax.legend(loc="upper right", fontsize=9, framealpha=0.9)
+    dt.style_legend(legend_filter, t)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(axis="y", alpha=0.3, zorder=0)
+    ax.grid(axis="y", alpha=0.3, zorder=0, color=t["grid"])
     all_vals = everyone_pcts + [v for pcts in model_pcts.values() for v in pcts]
     ax.set_ylim(0, max(all_vals) * 1.3)
+    dt.apply_figure(fig2, t)
+    dt.apply_axes(ax, t)
     fig2.tight_layout()
     figs["model_filtering"] = fig2
 

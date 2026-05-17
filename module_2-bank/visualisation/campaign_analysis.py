@@ -8,6 +8,8 @@ Called by main_vis.py — not intended to run standalone.
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import detailed_theme as dt
 from sklearn.metrics import confusion_matrix
 
 CALL_COST = -11 * 0.5
@@ -123,22 +125,25 @@ def run_analysis() -> dict:
     }
 
 
-def make_comparison_chart(scenarios: list[tuple[str, float]], title: str):
+def make_comparison_chart(scenarios: list[tuple[str, float]], title: str, theme: str = "light"):
+    t = dt.get_theme(theme)
     labels = [s[0] for s in scenarios]
     values = [s[1] for s in scenarios]
-    colors = ["#aaaaaa" if "No model" in l else "#4C72B0" for l in labels]
+    colors = [t["neutral"] if "No model" in l else t["blue"] for l in labels]
     fig, ax = plt.subplots(figsize=(max(6, len(scenarios) * 1.8), 5))
     ax.bar(labels, values, color=colors, edgecolor="white")
-    ax.axhline(0, color="black", linewidth=0.8)
-    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.axhline(0, color=t["spine"], linewidth=0.8)
+    ax.set_title(title, fontsize=13, fontweight="bold", color=t["text_bold"])
     ax.set_ylabel("Campaign Value ($)")
     ax.spines[["top", "right"]].set_visible(False)
     plt.xticks(rotation=15, ha="right")
+    dt.apply_figure(fig, t)
+    dt.apply_axes(ax, t)
     fig.tight_layout()
     return fig
 
 
-def make_figures(data: dict) -> dict[str, plt.Figure]:
+def make_figures(data: dict, theme: str = "light") -> dict[str, plt.Figure]:
     mini_scenarios = [(data["mini_baseline"]["label"], data["mini_baseline"]["value"])]
     for m in data["mini_models"]:
         mini_scenarios.append((m["label"], m["value"]))
@@ -148,8 +153,12 @@ def make_figures(data: dict) -> dict[str, plt.Figure]:
         large_scenarios.append((p["label"], p["value_projected"]))
 
     return {
-        "campaign_mini_holdout": make_comparison_chart(mini_scenarios, "Mini Holdout: No Model vs ML Models"),
-        "campaign_large_holdout": make_comparison_chart(large_scenarios, "Large Holdout Projection: No Model vs ML Models"),
+        "campaign_mini_holdout": make_comparison_chart(
+            mini_scenarios, "Mini Holdout: No Model vs ML Models", theme
+        ),
+        "campaign_large_holdout": make_comparison_chart(
+            large_scenarios, "Large Holdout Projection: No Model vs ML Models", theme
+        ),
     }
 
 

@@ -78,6 +78,3 @@ Baseline (call everyone): **$-0.38/call** (47 TP, 363 FP)
 | Model | Calls | TP (est) | FP (est) | Value (projected) |
 |-------|------:|---------:|---------:|------------------:|
 | No model (call everyone) | 4,119 | 472 | 3647 | $-1,576.47 |
-| 1 caleb (rf) | 1,268 | 305 | 963 | $6,628.40 |
-| 2 caleb (rf) | 798 | 272 | 526 | $7,774.86 |
-| 3 nels (stack_rf_knn) | 484 | 228 | 256 | $7,529.40 |

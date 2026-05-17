@@ -227,7 +227,7 @@ y_pred = (y_pred_proba >= threshold).astype(int)
 | Model 1 — RF + SMOTE | 1,268 | $6,628.40 |
 | No model | 4,119 | –$1,576.47 |
 
-![Campaign value with and without the model]({{ '/module_2-bank/visualisation/output/detailed/campaign_large_holdout.png' | relative_url }})
+![Campaign value with and without the model]({{ '/module_2-bank/visualisation/output/detailed/campaign_large_holdout.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/detailed/dark/campaign_large_holdout.png' | relative_url }}" }
 
 *Campaign value across the holdout set, with and without model filtering.*
 {: .figure-caption }
@@ -245,7 +245,7 @@ The model doesn't just pick fewer people — it picks **different** people. It s
 | Blue-collar workers (`job: blue-collar`) | 20.7% | 1.9% | **−18.8 pp** |
 | Basic education, 9 yr (`education: basic.9y`) | 15.9% | 1.9% | **−14.0 pp** |
 
-![Conversion rates by segment and the resulting call-list reshape]({{ '/module_2-bank/visualisation/output/detailed/group_profiles.png' | relative_url }})
+![Conversion rates by segment and the resulting call-list reshape]({{ '/module_2-bank/visualisation/output/detailed/group_profiles.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/detailed/dark/group_profiles.png' | relative_url }}" }
 
 *Conversion rates by segment and the model's reshape of the call list.*
 {: .figure-caption }

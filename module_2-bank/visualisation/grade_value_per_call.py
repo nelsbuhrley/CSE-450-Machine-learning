@@ -8,6 +8,8 @@ Called by main_vis.py — not intended to run standalone.
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import detailed_theme as dt
 from sklearn.metrics import confusion_matrix
 
 CALL_COST = -11 * 0.5
@@ -66,21 +68,26 @@ def run_analysis() -> dict:
             "baseline_fp": fp_all, "models": results}
 
 
-def make_figures(data: dict) -> dict[str, plt.Figure]:
+def make_figures(data: dict, theme: str = "light") -> dict[str, plt.Figure]:
+    t = dt.get_theme(theme)
     baseline_vpc = data["baseline_vpc"]
     names = [r["name"] for r in data["models"]]
     vpcs = [r["vpc"] for r in data["models"]]
-    colors = ["#2a9d8f" if v > baseline_vpc else "#DD8452" for v in vpcs]
+    colors = [t["good"] if v > baseline_vpc else t["bad"] for v in vpcs]
 
     fig, ax = plt.subplots(figsize=(max(6, len(names) * 1.5), 5))
     ax.bar(names, vpcs, color=colors, edgecolor="white")
-    ax.axhline(baseline_vpc, color="#e76f51", linestyle="--", linewidth=1.5,
+    ax.axhline(baseline_vpc, color=t["baseline"], linestyle="--", linewidth=1.5,
                label=f"Baseline / call everyone (${baseline_vpc:.2f})")
-    ax.set_title("Value per Call vs Call-Everyone Baseline", fontsize=13, fontweight="bold")
+    ax.set_title("Value per Call vs Call-Everyone Baseline", fontsize=13, fontweight="bold",
+                 color=t["text_bold"])
     ax.set_ylabel("Value per Call ($)")
     ax.set_xlabel("Model")
-    ax.legend(fontsize=9)
+    legend = ax.legend(fontsize=9)
+    dt.style_legend(legend, t)
     ax.spines[["top", "right"]].set_visible(False)
+    dt.apply_figure(fig, t)
+    dt.apply_axes(ax, t)
     fig.tight_layout()
     return {"value_per_call": fig}
 
