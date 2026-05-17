@@ -10,7 +10,8 @@
   highlighting whichever one matches `page_type`.
 {%- endcomment -%}
 
-{%- assign base = '/' | append: page.project | append: '/page/' -%}
+{%- assign project_root = '/' | append: page.project | append: '/' -%}
+{%- assign page_base = '/' | append: page.project | append: '/page/' -%}
 
 <nav class="project-nav" aria-label="Project sections">
   <div class="project-nav__brand">
@@ -19,7 +20,7 @@
   </div>
   <ul class="project-nav__tabs">
     <li>
-      <a href="{{ base | relative_url }}"
+      <a href="{{ project_root | relative_url }}"
          class="project-nav__tab{% if page.page_type == 'overview' %} is-active{% endif %}"
          {% if page.page_type == 'overview' %}aria-current="page"{% endif %}>
         Overview
