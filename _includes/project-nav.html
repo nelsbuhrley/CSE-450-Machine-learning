@@ -12,6 +12,9 @@
 
 {%- assign project_root = '/' | append: page.project | append: '/' -%}
 {%- assign page_base = '/' | append: page.project | append: '/page/' -%}
+{%- assign github_repo = page.github_repo | default: site.github_repo -%}
+{%- assign github_branch = page.github_branch | default: site.github_branch -%}
+{%- assign repo_url = "https://github.com/" | append: github_repo | append: "/tree/" | append: github_branch | append: "/" | append: page.project -%}
 
 <nav class="project-nav" aria-label="Project sections">
   <div class="project-nav__brand">
@@ -40,5 +43,15 @@
         Technical Deep-Dive
       </a>
     </li>
+    {%- if github_repo and github_branch -%}
+    <li>
+      <a href="{{ repo_url }}"
+         class="project-nav__tab"
+         target="_blank"
+         rel="noopener">
+        Repo Folder
+      </a>
+    </li>
+    {%- endif -%}
   </ul>
 </nav>

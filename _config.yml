@@ -14,6 +14,10 @@ author: "Nels Buhrley"
 baseurl: "/CSE-450-Machine-learning"
 url: "https://stepperanch.github.io"
 
+# GitHub repository defaults for project navigation links
+github_repo: "nelsbuhrley/CSE-450-Machine-learning"
+github_branch: "main"
+
 # Markdown Rendering
 markdown: kramdown
 kramdown:

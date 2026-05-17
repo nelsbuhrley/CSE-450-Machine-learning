@@ -42,11 +42,12 @@ page_type: overview            # or "summary" or "technical"
 permalink: /<slug>/page/    # adjust path per page (see above)
 ```
 
-The `technical.md` page additionally needs `github_repo` and `github_branch`
-so the "View on GitHub →" links over each code block resolve correctly:
+The `technical.md` page uses GitHub links for code excerpts. By default those
+links resolve using the site-wide values in `_config.yml`, so you only need
+to set overrides when a project lives in a different repo or branch:
 
 ```yaml
-github_repo: "stepperanch/CSE-450-Machine-learning"
+github_repo: "nelsbuhrley/CSE-450-Machine-learning"
 github_branch: "main"
 ```
 
@@ -103,7 +104,7 @@ not invent variants.
 <div class="code-meta">
   <span class="code-meta__path">module_X/models/foo.py · L10–L25</span>
   <a class="code-meta__link"
-     href="https://github.com/{{ page.github_repo }}/blob/{{ page.github_branch }}/module_X/models/foo.py#L10-L25"
+  href="https://github.com/{{ page.github_repo | default: site.github_repo }}/blob/{{ page.github_branch | default: site.github_branch }}/module_X/models/foo.py#L10-L25"
      target="_blank" rel="noopener">View on GitHub →</a>
 </div>
 
@@ -130,8 +131,12 @@ For figure captions, use kramdown's block-attribute syntax to attach the
 3. Make sure the project's image folder is **not** excluded by `_config.yml`.
    PNGs at `<slug>/visualisation/...` are served as-is.
 4. Optionally update the corner-menu nav in `ui/js/nav.js` if you want the
-   project to appear in the top-right "Menu" panel.
-5. Push to `main`; the GitHub Pages workflow rebuilds the site.
+  project to appear in the top-right "Menu" panel.
+5. The project sub-nav automatically renders a **Repo Folder** tab pointing
+  at `https://github.com/<repo>/tree/<branch>/<slug>` using `_config.yml`
+  defaults. If a project lives in a different repo or branch, set
+  `github_repo` and `github_branch` in all three page frontmatters.
+6. Push to `main`; the GitHub Pages workflow rebuilds the site.
 
 ## Conventions worth keeping
 

@@ -5,7 +5,7 @@ project: module_2-bank
 project_title: "Module 2 · Bank Marketing"
 page_type: technical
 permalink: /module_2-bank/page/technical/
-github_repo: "stepperanch/CSE-450-Machine-learning"
+github_repo: "nelsbuhrley/CSE-450-Machine-learning"
 github_branch: "main"
 ---
 
