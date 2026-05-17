@@ -44,6 +44,20 @@ def model_key(path: Path) -> str:
     return inner.split("_holdout-predictions")[0].split("_mini-holdout-predictions")[0]
 
 
+def normalize_holdout_key(path: Path, model_map: dict) -> str | None:
+    """Map alternate holdout filenames to known mini-holdout model keys."""
+    stem = path.stem
+    if stem.startswith("NorthWind_") and stem.endswith("-Module2-predictions"):
+        inner = stem.removeprefix("NorthWind_").removesuffix("-Module2-predictions")
+        if inner in model_map:
+            return inner
+        prefix = f"{inner}_"
+        matches = [key for key in model_map.keys() if key.startswith(prefix)]
+        if len(matches) == 1:
+            return matches[0]
+    return None
+
+
 def analyse_historical() -> dict:
     df = pd.read_csv(TRAINING_FILE)
     tp = int((df['y'] == 'yes').sum())
@@ -97,15 +111,22 @@ def project_large_holdout(mini_baseline: dict, mini_models: list[dict]) -> tuple
     projections = []
     for pred_file in sorted(LARGE_PRED_DIR.glob("*.csv")):
         key = model_key(pred_file)
+        label = extract_model_id(pred_file)
         if key not in model_map:
-            continue
+            alt_key = normalize_holdout_key(pred_file, model_map)
+            if alt_key is None:
+                continue
+            key = alt_key
+            label = model_map[key]["label"]
+        else:
+            label = model_map[key]["label"]
         preds = pd.read_csv(pred_file).iloc[:, 0]
         n_calls = int((preds == 1).sum())
         precision = model_map[key]["precision"]
         tp_est = n_calls * precision
         fp_est = n_calls * (1 - precision)
         projections.append({
-            "label": extract_model_id(pred_file), "total_calls": n_calls,
+            "label": label, "total_calls": n_calls,
             "tp_est": tp_est, "fp_est": fp_est,
             "precision_used": precision,
             "value_projected": campaign_value(tp_est, fp_est),
