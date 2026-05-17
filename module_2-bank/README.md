@@ -35,7 +35,7 @@ The work covers the full classification pipeline end to end: exploratory data an
 
 All three of our models flip a money-losing campaign into a profitable one. On a 410-contact test, calling everyone loses **$157**; our best model (a stacking classifier with RF + KNN base learners and a tuned threshold of 0.61) returns **$824** — a precision of 47.2% versus the 11.5% baseline. Projected to a 4,119-contact campaign, the balanced-RF variant returns the highest projected value at **$7,775**.
 
-![Campaign value with and without our model]({{ '/module_2-bank/visualisation/output/marketing/white_bars/campaign_value.png' | relative_url }})
+![Campaign value with and without our model]({{ '/module_2-bank/visualisation/output/marketing/white_bars/campaign_value.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/marketing/dark_bars/campaign_value.png' | relative_url }}" }
 
 *Recent 410-contact test (left) and projected 4,119-contact campaign (right), with and without the model.*
 {: .figure-caption }

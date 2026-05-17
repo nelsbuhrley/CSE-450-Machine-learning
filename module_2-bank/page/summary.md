@@ -42,7 +42,7 @@ In the three years of your campaign, the month of May had the most calls — tot
   </div>
 </div>
 
-![Value per call across May mass calls, campaign average, and targeted months]({{ '/module_2-bank/visualisation/output/marketing/white_bars/value_per_call_story.png' | relative_url }})
+![Value per call across May mass calls, campaign average, and targeted months]({{ '/module_2-bank/visualisation/output/marketing/white_bars/value_per_call_story.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/marketing/dark_bars/value_per_call_story.png' | relative_url }}" }
 
 *Figure 1.  Value per call across May mass calls, campaign average, and targeted months.*
 {: .figure-caption }
@@ -55,7 +55,7 @@ We built our model to help you reach consumers who are in need of your services 
 
 In your next proposed campaign, contacting all 4,100 people on your call list will likely lead to a loss of approximately **$1,600**. We project that once running your call list through our model, you will make **$7,300** by stripping your list down to the 480 highest-value prospects.
 
-![Recent 410-contact test and the projected 4,119-contact campaign, with and without the model]({{ '/module_2-bank/visualisation/output/marketing/white_bars/campaign_value.png' | relative_url }})
+![Recent 410-contact test and the projected 4,119-contact campaign, with and without the model]({{ '/module_2-bank/visualisation/output/marketing/white_bars/campaign_value.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/marketing/dark_bars/campaign_value.png' | relative_url }}" }
 
 *Figure 2.  Recent 410-contact test (left) and the projected 4,119-contact campaign (right), with and without the model.*
 {: .figure-caption }
@@ -68,7 +68,7 @@ To maximize resource efficiency, our model cleanly separates the database into h
 
 **In stark contrast, the Black List** identifies the high-waste groups where our budget goes to die. Customers contacted via traditional landlines (5.3% conversion) and those in blue-collar employment blocks (6.8% conversion) drastically underperform our baseline. Historically, these two segments clogged our pipeline, consuming a staggering 58% of all marketing calls while returning almost no value. The model aggressively prunes this dead weight, shrinking their combined presence on the call list down to a lean 11% so your team stops wasting time on dead ends.
 
-![Conversion rates by segment and the resulting call-list reshape]({{ '/module_2-bank/visualisation/output/marketing/white_bars/golden_blacklist.png' | relative_url }})
+![Conversion rates by segment and the resulting call-list reshape]({{ '/module_2-bank/visualisation/output/marketing/white_bars/golden_blacklist.png' | relative_url }}){: data-dark-src="{{ '/module_2-bank/visualisation/output/marketing/dark_bars/golden_blacklist.png' | relative_url }}" }
 
 *Figure 3.  Conversion rates by segment (left) and the resulting call-list reshape (right).*
 {: .figure-caption }

@@ -122,6 +122,13 @@ For figure captions, use kramdown's block-attribute syntax to attach the
 *Caption text.*
 ```
 
+If a chart has a dark-mode variant, add a `data-dark-src` attribute to the
+image so the theme switcher can swap it automatically:
+
+```markdown
+![Alt text]({{ '/path/to/chart_light.png' | relative_url }}){: data-dark-src="{{ '/path/to/chart_dark.png' | relative_url }}" }
+```
+
 ## Adding a new project — checklist
 
 1. Create `<slug>/page/` and the three `.md` files above with the

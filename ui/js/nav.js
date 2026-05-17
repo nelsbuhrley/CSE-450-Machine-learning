@@ -1,9 +1,28 @@
 (function () {
+    var themeStorageKey = "site-theme";
+    var motionStorageKey = "site-motion";
+    var mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     var navLinks = [
         { title: "Home", href: "/" },
         { title: "Module 2: Bank Marketing", href: "/module_2-bank/" },
         { title: "Tools", href: "/tools/" }
     ];
+
+    function getStoredTheme() {
+        var value = localStorage.getItem(themeStorageKey);
+        if (value === "light" || value === "dark" || value === "auto") {
+            return value;
+        }
+        return "auto";
+    }
+
+    function getStoredMotion() {
+        var value = localStorage.getItem(motionStorageKey);
+        if (value === "default" || value === "reduced") {
+            return value;
+        }
+        return "default";
+    }
 
     function getBaseUrl() {
         var baseUrl = window.__SITE_BASEURL || "";
@@ -29,6 +48,65 @@
         return path;
     }
 
+    function getEffectiveTheme(themeChoice) {
+        if (themeChoice === "light" || themeChoice === "dark") {
+            return themeChoice;
+        }
+        return mediaQuery.matches ? "dark" : "light";
+    }
+
+    function syncThemeImages(effectiveTheme) {
+        var isDark = effectiveTheme === "dark";
+        var images = document.querySelectorAll("img[data-dark-src]");
+        images.forEach(function (img) {
+            if (!img.dataset.lightSrc) {
+                img.dataset.lightSrc = img.currentSrc || img.src;
+            }
+            var nextSrc = isDark ? img.dataset.darkSrc : img.dataset.lightSrc;
+            if (nextSrc && img.src !== nextSrc) {
+                img.src = nextSrc;
+            }
+        });
+    }
+
+    function applyTheme(themeChoice) {
+        var effectiveTheme = getEffectiveTheme(themeChoice);
+        document.documentElement.setAttribute("data-theme", effectiveTheme);
+        document.documentElement.style.colorScheme = effectiveTheme;
+        syncThemeImages(effectiveTheme);
+    }
+
+    function applyMotion(motionChoice) {
+        var shouldReduce = motionChoice === "reduced";
+        document.documentElement.classList.toggle("reduce-motion", shouldReduce);
+    }
+
+    function persistTheme(themeChoice) {
+        localStorage.setItem(themeStorageKey, themeChoice);
+    }
+
+    function persistMotion(motionChoice) {
+        localStorage.setItem(motionStorageKey, motionChoice);
+    }
+
+    function buildSelect(options, id, ariaLabel, selectedValue) {
+        var select = document.createElement("select");
+        select.id = id;
+        select.setAttribute("aria-label", ariaLabel);
+
+        options.forEach(function (item) {
+            var option = document.createElement("option");
+            option.value = item.value;
+            option.textContent = item.text;
+            if (item.value === selectedValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        return select;
+    }
+
     function buildNavList() {
         var nav = document.createElement("nav");
         nav.className = "corner-menu-nav";
@@ -50,7 +128,7 @@
         return nav;
     }
 
-    function buildMenu() {
+    function buildMenu(themeChoice, motionChoice) {
         if (document.querySelector(".corner-menu")) {
             return;
         }
@@ -78,7 +156,7 @@
         panel.className = "corner-menu-panel";
 
         var navSection = document.createElement("section");
-        navSection.className = "corner-menu-section";
+        navSection.className = "corner-menu-section corner-menu-section--nav";
 
         var navTitle = document.createElement("p");
         navTitle.className = "corner-menu-title";
@@ -86,6 +164,74 @@
 
         navSection.appendChild(navTitle);
         navSection.appendChild(buildNavList());
+
+        var settingsSection = document.createElement("section");
+        settingsSection.className = "corner-menu-section corner-menu-section--settings";
+
+        var settingsTitle = document.createElement("p");
+        settingsTitle.className = "corner-menu-title";
+        settingsTitle.textContent = "Settings";
+
+        var themeRow = document.createElement("div");
+        themeRow.className = "corner-menu-row";
+
+        var themeLabel = document.createElement("label");
+        themeLabel.className = "corner-menu-label";
+        themeLabel.setAttribute("for", "theme-select");
+        themeLabel.textContent = "Theme";
+
+        var themeSelect = buildSelect(
+            [
+                { value: "auto", text: "Auto" },
+                { value: "light", text: "Light" },
+                { value: "dark", text: "Dark" }
+            ],
+            "theme-select",
+            "Choose theme",
+            themeChoice
+        );
+
+        themeSelect.addEventListener("change", function () {
+            var nextChoice = themeSelect.value;
+            persistTheme(nextChoice);
+            applyTheme(nextChoice);
+        });
+
+        themeRow.appendChild(themeLabel);
+        themeRow.appendChild(themeSelect);
+
+        var motionRow = document.createElement("div");
+        motionRow.className = "corner-menu-row";
+
+        var motionLabel = document.createElement("label");
+        motionLabel.className = "corner-menu-label";
+        motionLabel.setAttribute("for", "motion-select");
+        motionLabel.textContent = "Motion";
+
+        var motionSelect = buildSelect(
+            [
+                { value: "default", text: "Default" },
+                { value: "reduced", text: "Reduced" }
+            ],
+            "motion-select",
+            "Choose animation mode",
+            motionChoice
+        );
+
+        motionSelect.addEventListener("change", function () {
+            var nextChoice = motionSelect.value;
+            persistMotion(nextChoice);
+            applyMotion(nextChoice);
+        });
+
+        motionRow.appendChild(motionLabel);
+        motionRow.appendChild(motionSelect);
+
+        settingsSection.appendChild(settingsTitle);
+        settingsSection.appendChild(themeRow);
+        settingsSection.appendChild(motionRow);
+
+        panel.appendChild(settingsSection);
         panel.appendChild(navSection);
 
         function isPinned() {
@@ -141,9 +287,30 @@
         syncExpandedState();
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", buildMenu);
-    } else {
-        buildMenu();
+    function initializeMenu() {
+        var themeChoice = getStoredTheme();
+        var motionChoice = getStoredMotion();
+
+        applyTheme(themeChoice);
+        applyMotion(motionChoice);
+
+        mediaQuery.addEventListener("change", function () {
+            if (getStoredTheme() === "auto") {
+                applyTheme("auto");
+            }
+        });
+
+        function start() {
+            buildMenu(themeChoice, motionChoice);
+            syncThemeImages(getEffectiveTheme(themeChoice));
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", start);
+        } else {
+            start();
+        }
     }
+
+    initializeMenu();
 })();
