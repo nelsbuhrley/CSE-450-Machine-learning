@@ -33,8 +33,15 @@
     --tok-constant: #9f3d05;
     --table-frame: #4a7a5c;
     --table-cell-line: #4a7a5c;
+    --table-head-bg: color-mix(in srgb, var(--brand-ink) 58%, var(--surface));
     --block-soft-bg: #e4f2ea;
     --block-soft-border: #8fba9e;
+    --project-nav-bg: linear-gradient(180deg,
+        color-mix(in srgb, var(--brand-ink) 70%, var(--surface)),
+        color-mix(in srgb, var(--brand-ink) 35%, var(--surface)));
+    --exec-hero-bg:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand-ink) 80%, transparent), transparent 55%),
+        linear-gradient(180deg, var(--surface), var(--surface-2));
 
     --shadow-soft: 0 8px 28px rgba(10, 40, 25, 0.08);
     --shadow-card: 0 12px 38px rgba(10, 40, 25, 0.12);
@@ -72,8 +79,13 @@
     --tok-constant: #ffc089;
     --table-frame: #7fb59a;
     --table-cell-line: #7fb59a;
+    --table-head-bg: #1b2c22;
     --block-soft-bg: #1a2c22;
     --block-soft-border: #3e5d4c;
+    --project-nav-bg: linear-gradient(180deg, #16261d 0%, #1e3328 100%);
+    --exec-hero-bg:
+        radial-gradient(circle at 100% 0%, rgba(28, 96, 64, 0.25), transparent 55%),
+        linear-gradient(180deg, #15241c 0%, #1e3227 100%);
 
     --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.35);
     --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.42);
@@ -218,7 +230,7 @@ body {
 }
 
 .main-content th {
-    background: color-mix(in srgb, var(--brand-ink) 58%, var(--surface));
+    background: var(--table-head-bg);
     font-weight: 700;
 }
 
@@ -659,15 +671,8 @@ html.reduce-motion * {
     padding: 0.9rem 1rem 0.8rem;
     border: 1px solid var(--line);
     border-radius: 12px;
-    background: linear-gradient(180deg,
-        color-mix(in srgb, var(--brand-ink) 70%, var(--surface)),
-        color-mix(in srgb, var(--brand-ink) 35%, var(--surface)));
+    background: var(--project-nav-bg);
     box-shadow: var(--shadow-soft);
-}
-
-:root[data-theme="dark"] .project-nav {
-    background: linear-gradient(180deg, #16261d 0%, #1e3328 100%);
-    border-color: var(--line-strong);
 }
 
 .project-nav__brand {
@@ -744,17 +749,8 @@ html.reduce-motion * {
     padding: 1.6rem 1.4rem 1.4rem;
     border: 1px solid var(--line);
     border-radius: 14px;
-    background:
-        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand-ink) 80%, transparent), transparent 55%),
-        linear-gradient(180deg, var(--surface), var(--surface-2));
+    background: var(--exec-hero-bg);
     box-shadow: var(--shadow-soft);
-}
-
-:root[data-theme="dark"] .exec-hero {
-    background:
-        radial-gradient(circle at 100% 0%, rgba(28, 96, 64, 0.25), transparent 55%),
-        linear-gradient(180deg, #15241c 0%, #1e3227 100%);
-    border-color: var(--line-strong);
 }
 
 .exec-hero__eyebrow {
