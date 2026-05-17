@@ -4,7 +4,7 @@ title: "Module 2 · Bank Marketing — Overview"
 project: module_2-bank
 project_title: "Module 2 · Bank Marketing"
 page_type: overview
-permalink: /module_2-bank/page/
+permalink: /module_2-bank/
 ---
 
 {% include project-nav.html %}
