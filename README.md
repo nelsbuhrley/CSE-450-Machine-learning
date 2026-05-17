@@ -51,13 +51,13 @@ We built three classifiers on the [UCI Bank Marketing dataset](https://archive.i
 
 ### Highlights
 
-![Campaign Value](module_2-bank/visualisation/output/marketing/dark_bars/campaign_value.png)
+![Campaign Value](module_2-bank/visualisation/output/marketing/white_bars/campaign_value.png){: data-dark-src="module_2-bank/visualisation/output/marketing/dark_bars/campaign_value.png" }
 
 - **Without ML filtering:** the campaign loses money ($-157 on 410 test contacts)
 - **With our best model:** $824 profit on the same 410 contacts
 - **Projected at scale (4,119 contacts):** up to $7,775 in campaign value
 
-![Golden List / Black List](module_2-bank/visualisation/output/marketing/dark_bars/golden_blacklist.png)
+![Golden List / Black List](module_2-bank/visualisation/output/marketing/white_bars/golden_blacklist.png){: data-dark-src="module_2-bank/visualisation/output/marketing/dark_bars/golden_blacklist.png" }
 
 The models concentrate the call list on high-conversion groups (previously converted clients, students, retirees) and filter out low-yield contacts (landline-reached, blue-collar workers), boosting precision from 11.5% to 47.2%.
 
