@@ -33,6 +33,17 @@ jobs:
           source: ./
           destination: ./_site
 
+      - name: Copy HTML dashboards
+        run: |
+          jq -r '.html_files[]' pages-html.json | while read file; do
+            if [ -f "$file" ]; then
+              mkdir -p "./_site/$(dirname "$file")"
+              cp "$file" "./_site/$file"
+            else
+              echo "Warning: $file not found, skipping"
+            fi
+          done
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
 

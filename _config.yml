@@ -12,7 +12,7 @@ description: >-
   exploratory data analysis, and predictive modeling for real-world datasets.
 author: "Nels Buhrley"
 baseurl: "/CSE-450-Machine-learning"
-url: "https://stepperanch.github.io"
+url: "https://nelsbuhrley.github.io"
 
 # GitHub repository defaults for project navigation links
 github_repo: "nelsbuhrley/CSE-450-Machine-learning"
