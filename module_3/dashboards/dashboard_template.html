@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King County Housing — EDA Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"
+        integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+:root {
+  --gap: 16px;
+  --radius: 10px;
+}
+[data-theme="light"] {
+  --bg-page:     #f5f6f8;
+  --bg-card:     #ffffff;
+  --bg-header:   #1a1a2e;
+  --bg-input:    #ffffff;
+  --bg-hover:    #f3f4f6;
+  --text-pri:    #111827;
+  --text-sec:    #6b7280;
+  --text-mute:   #9ca3af;
+  --text-on-dk:  #ffffff;
+  --border:      #e5e7eb;
+  --border-str:  #d1d5db;
+  --accent:      #2563eb;
+  --positive:    #10b981;
+  --negative:    #ef4444;
+  --neutral:     #6b7280;
+  --c1: #4C72B0; --c2: #DD8452; --c3: #55A868; --c4: #C44E52;
+  --c5: #8172B3; --c6: #937860; --c7: #DA8BC3; --c8: #8C8C8C;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+[data-theme="dark"] {
+  --bg-page:     #0f172a;
+  --bg-card:     #1e293b;
+  --bg-header:   #020617;
+  --bg-input:    #0f172a;
+  --bg-hover:    #334155;
+  --text-pri:    #f1f5f9;
+  --text-sec:    #cbd5e1;
+  --text-mute:   #64748b;
+  --text-on-dk:  #ffffff;
+  --border:      #334155;
+  --border-str:  #475569;
+  --accent:      #60a5fa;
+  --positive:    #34d399;
+  --negative:    #f87171;
+  --neutral:     #94a3b8;
+  --c1: #7AA2D9; --c2: #F1A06A; --c3: #6FBF7C; --c4: #E07178;
+  --c5: #A395CC; --c6: #B59879; --c7: #EAA7D8; --c8: #B0B0B0;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-pri);
+  line-height: 1.5;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+.dashboard {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: var(--gap);
+}
+header.top {
+  background: var(--bg-header);
+  color: var(--text-on-dk);
+  padding: 18px 24px;
+  border-radius: var(--radius);
+  margin-bottom: var(--gap);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+header.top h1 { font-size: 18px; font-weight: 600; }
+header.top .sub {
+  font-size: 12px; opacity: 0.7; margin-top: 2px;
+}
+.toolbar {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.toolbar label { font-size: 11px; color: rgba(255,255,255,0.65); }
+.toolbar select, .toolbar input[type="number"] {
+  padding: 5px 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-on-dk);
+  font-size: 12px;
+  min-width: 80px;
+}
+.toolbar select option { background: var(--bg-header); }
+.theme-toggle, .reset-btn {
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-on-dk);
+  font-size: 12px;
+  cursor: pointer;
+}
+.theme-toggle:hover, .reset-btn:hover { background: rgba(255,255,255,0.18); }
+
+section.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.kpi {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+}
+.kpi .label {
+  font-size: 11px; color: var(--text-sec); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.kpi .val {
+  font-size: 22px; font-weight: 600; color: var(--text-pri);
+}
+.kpi .delta {
+  font-size: 11px; color: var(--text-mute); margin-top: 2px;
+}
+
+.row {
+  display: grid; gap: var(--gap); margin-bottom: var(--gap);
+}
+.row.r2 { grid-template-columns: 2fr 1fr; }
+.row.r3 { grid-template-columns: repeat(3, 1fr); }
+.row.eq2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 1000px) {
+  .row.r2, .row.r3, .row.eq2 { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.card h3 {
+  font-size: 13px; font-weight: 600; color: var(--text-pri);
+  margin-bottom: 4px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.card .note {
+  font-size: 11px; color: var(--text-sec); margin-bottom: 12px;
+}
+.card .picker {
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-pri);
+}
+.canvas-wrap { position: relative; height: 280px; }
+.canvas-wrap.tall { height: 380px; }
+.canvas-wrap.short { height: 200px; }
+
+#map { height: 480px; border-radius: 6px; }
+.leaflet-tooltip.zc-tip {
+  font-size: 11px; padding: 6px 8px;
+}
+.legend {
+  background: var(--bg-card);
+  padding: 8px 10px;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  font-size: 11px;
+  color: var(--text-pri);
+}
+.legend .scale {
+  display: flex; align-items: center; gap: 0; height: 10px; width: 160px;
+  border-radius: 2px; overflow: hidden; margin: 4px 0;
+}
+.legend .scale > div { flex: 1; height: 100%; }
+.legend .labels {
+  display: flex; justify-content: space-between; color: var(--text-sec);
+}
+
+table.dt {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+table.dt thead th {
+  text-align: left; padding: 8px 10px;
+  border-bottom: 2px solid var(--border-str);
+  color: var(--text-sec); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  cursor: pointer; user-select: none; white-space: nowrap;
+  background: var(--bg-card);
+}
+table.dt thead th:hover { color: var(--text-pri); background: var(--bg-hover); }
+table.dt tbody td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+table.dt tbody tr:hover { background: var(--bg-hover); }
+.table-wrap { max-height: 360px; overflow: auto; }
+
+.corr-grid {
+  display: grid; gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+}
+.corr-cell {
+  background: var(--bg-card); padding: 4px 6px; font-size: 10px;
+  text-align: center; color: var(--text-pri);
+}
+.corr-cell.h { font-weight: 600; background: var(--bg-hover); }
+.corr-cell.h.r {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  text-align: right; padding: 6px 4px;
+}
+
+.feature-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.feature-card {
+  background: var(--bg-page);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.feature-card .fname {
+  font-size: 11px; font-weight: 600; color: var(--text-pri);
+  margin-bottom: 2px;
+}
+.feature-card .flabel {
+  font-size: 10px; color: var(--text-sec); margin-bottom: 6px;
+}
+.feature-card .fchart { height: 70px; position: relative; }
+.feature-card .fmeta {
+  font-size: 10px; color: var(--text-mute); margin-top: 4px;
+  display: flex; justify-content: space-between;
+}
+
+footer.bot {
+  text-align: center; padding: 16px; font-size: 11px;
+  color: var(--text-mute);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px;}
+
+.outlier-bar {
+  height: 6px; background: var(--bg-page); border-radius: 3px;
+  position: relative; overflow: hidden;
+}
+.outlier-bar .fill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: var(--c4); border-radius: 3px;
+}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="dashboard">
+
+  <header class="top">
+    <div>
+      <h1>King County housing — exploratory dashboard</h1>
+      <div class="sub" id="meta-line">Loading…</div>
+    </div>
+    <div class="toolbar">
+      <label>Year built ≥
+        <input type="number" id="f-yr-min" min="1900" max="2015" step="5" placeholder="any">
+      </label>
+      <label>Bedrooms
+        <select id="f-beds"><option value="">any</option></select>
+      </label>
+      <label>Grade ≥
+        <select id="f-grade-min"><option value="">any</option></select>
+      </label>
+      <label>Waterfront
+        <select id="f-water">
+          <option value="">any</option>
+          <option value="1">yes</option>
+          <option value="0">no</option>
+        </select>
+      </label>
+      <label>Price range
+        <select id="f-pricebin">
+          <option value="">any</option>
+          <option value="0-300000">under $300k</option>
+          <option value="300000-600000">$300k–$600k</option>
+          <option value="600000-1000000">$600k–$1M</option>
+          <option value="1000000-9e9">$1M+</option>
+        </select>
+      </label>
+      <button class="reset-btn" id="reset">reset</button>
+      <button class="theme-toggle" id="theme">dark mode</button>
+    </div>
+  </header>
+
+  <!-- KPI ROW -->
+  <section class="kpis" id="kpis"></section>
+
+  <!-- MAP + SUMMARY -->
+  <div class="row r2">
+    <div class="card">
+      <h3>
+        <span>Geographic view</span>
+        <span style="display:flex; gap:6px;">
+          <select class="picker" id="map-metric">
+            <option value="median_price">color: median price</option>
+            <option value="median_ppsf">color: median $/sqft</option>
+            <option value="n">color: listing count</option>
+            <option value="median_grade">color: median grade</option>
+            <option value="median_age">color: median age</option>
+            <option value="pct_waterfront">color: % waterfront</option>
+          </select>
+          <select class="picker" id="map-layer">
+            <option value="choropleth">choropleth</option>
+            <option value="points">points</option>
+            <option value="both">both</option>
+          </select>
+        </span>
+      </h3>
+      <div class="note">Click a zipcode polygon to filter the rest of the dashboard. Click again or hit reset to clear.</div>
+      <div id="map"></div>
+    </div>
+    <div class="card">
+      <h3>Target distribution</h3>
+      <div class="note">Sale price is right-skewed; log10 transform pulls it toward normal — usually a better target for linear models.</div>
+      <div class="canvas-wrap short"><canvas id="ch-price-hist"></canvas></div>
+      <div class="canvas-wrap short" style="margin-top: 8px;"><canvas id="ch-logprice-hist"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TEMPORAL ROW -->
+  <div class="row r3">
+    <div class="card">
+      <h3>Monthly sales volume &amp; median price</h3>
+      <div class="note">Volume bars + median price line. Watch the spring 2015 lift.</div>
+      <div class="canvas-wrap"><canvas id="ch-monthly"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Year-built decade cohorts</h3>
+      <div class="note">Median price and $/sqft by construction decade. Older stock isn't always cheaper — location dominates.</div>
+      <div class="canvas-wrap"><canvas id="ch-yearbuilt"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Day-of-week pattern</h3>
+      <div class="note">Closings cluster mid-week; weekend listings are rare in this market.</div>
+      <div class="canvas-wrap"><canvas id="ch-weekday"></canvas></div>
+    </div>
+  </div>
+
+  <!-- FEATURE ANALYTICS -->
+  <div class="row r2">
+    <div class="card">
+      <h3>
+        <span>Scatter: feature vs price</span>
+        <span style="display:flex; gap:6px;">
+          <select class="picker" id="sc-x"></select>
+          <select class="picker" id="sc-y"></select>
+          <select class="picker" id="sc-color">
+            <option value="grade">color: grade</option>
+            <option value="bedrooms">color: bedrooms</option>
+            <option value="waterfront">color: waterfront</option>
+            <option value="condition">color: condition</option>
+            <option value="view">color: view</option>
+            <option value="zipcode">color: zipcode</option>
+          </select>
+        </span>
+      </h3>
+      <div class="note">4,000-row sample. Most lift in price comes from sqft_living and grade.</div>
+      <div class="canvas-wrap tall"><canvas id="ch-scatter"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Correlation with price</h3>
+      <div class="note">|r| sorted. Strong signal: living area, grade, above-ground sqft, neighbours' sqft.</div>
+      <div class="canvas-wrap tall"><canvas id="ch-corrbar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- FULL CORR MATRIX -->
+  <div class="card" style="margin-bottom: var(--gap);">
+    <h3>Full correlation matrix</h3>
+    <div class="note">Pearson r. Useful for spotting multicollinearity (e.g. sqft_living ↔ sqft_above).</div>
+    <div id="corr-matrix"></div>
+  </div>
+
+  <!-- FEATURE DISTRIBUTIONS GRID -->
+  <div class="card" style="margin-bottom: var(--gap);">
+    <h3>Feature distributions (skew flagged)</h3>
+    <div class="note">Histograms clipped to 0.5–99.5 percentile. Skew &gt; |1| suggests a log/Yeo-Johnson transform before linear modelling.</div>
+    <div class="feature-grid" id="feature-grid"></div>
+  </div>
+
+  <!-- OUTLIERS -->
+  <div class="card" style="margin-bottom: var(--gap);">
+    <h3>Outlier &amp; missingness summary</h3>
+    <div class="note">IQR fences (k = 3). No nulls were detected in the source CSV. The 33-bedroom row is auto-repaired in the build script.</div>
+    <div id="outlier-table"></div>
+  </div>
+
+  <!-- ZIPCODE TABLE -->
+  <div class="card" style="margin-bottom: var(--gap);">
+    <h3>Zipcode detail (sortable)</h3>
+    <div class="note">Sorted by median price by default. Click a column header to re-sort.</div>
+    <div class="table-wrap"><table class="dt" id="zip-table"></table></div>
+  </div>
+
+  <footer class="bot">
+    Built from <span id="meta-source"></span> ·
+    <span id="meta-rows"></span> rows ·
+    generated <span id="meta-time"></span>
+  </footer>
+
+</div>
+
+<script>
+/* __DATA__ */
+
+/* =====================================================================
+   THEME + STATE
+   ===================================================================== */
+const THEME_KEY = "kc-housing-theme";
+function applyTheme(t) {
+  document.body.dataset.theme = t;
+  document.getElementById("theme").textContent = t === "light" ? "dark mode" : "light mode";
+  localStorage.setItem(THEME_KEY, t);
+  if (window._kc) window._kc.rerenderForTheme();
+}
+applyTheme(localStorage.getItem(THEME_KEY) || "light");
+document.getElementById("theme").onclick = () => {
+  applyTheme(document.body.dataset.theme === "light" ? "dark" : "light");
+};
+
+function cssvar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+function fmt(v, kind) {
+  if (v === null || v === undefined || (typeof v === "number" && isNaN(v))) return "—";
+  switch (kind) {
+    case "money":
+      if (Math.abs(v) >= 1e6) return "$" + (v/1e6).toFixed(2) + "M";
+      if (Math.abs(v) >= 1e3) return "$" + (v/1e3).toFixed(0) + "K";
+      return "$" + Math.round(v).toLocaleString();
+    case "int":   return Math.round(v).toLocaleString();
+    case "pct":   return v.toFixed(1) + "%";
+    case "float": return (Math.round(v*100)/100).toLocaleString();
+    default:      return String(v);
+  }
+}
+
+/* =====================================================================
+   COLOR HELPERS  (sequential blues — works in both themes via accent)
+   ===================================================================== */
+function rampColor(t) {
+  // t in [0,1] -> rgb on a perceptual ramp (yellow -> red -> purple style viridis-ish)
+  // Viridis-like 5-stop interpolation.
+  const stops = [
+    [68, 1, 84],     // 0  dark purple
+    [59, 82, 139],   // .25
+    [33, 145, 140],  // .50
+    [94, 201, 98],   // .75
+    [253, 231, 37],  // 1  yellow
+  ];
+  t = Math.max(0, Math.min(1, t));
+  const i = Math.min(Math.floor(t * (stops.length-1)), stops.length-2);
+  const u = t * (stops.length-1) - i;
+  const [r0,g0,b0] = stops[i], [r1,g1,b1] = stops[i+1];
+  const r = Math.round(r0 + (r1-r0)*u);
+  const g = Math.round(g0 + (g1-g0)*u);
+  const b = Math.round(b0 + (b1-b0)*u);
+  return `rgb(${r},${g},${b})`;
+}
+function corrColor(r) {
+  // diverging red-white-blue
+  if (r >= 0) {
+    const t = r;
+    return `rgba(37, 99, 235, ${0.15 + t*0.7})`;
+  } else {
+    const t = -r;
+    return `rgba(220, 38, 38, ${0.15 + t*0.7})`;
+  }
+}
+const PALETTE = () =>
+  ["--c1","--c2","--c3","--c4","--c5","--c6","--c7","--c8"].map(cssvar);
+
+
+/* =====================================================================
+   FILTERING
+   ===================================================================== */
+const filters = {
+  zipcode: null,
+  yr_min:  null,
+  bedrooms:null,
+  grade_min: null,
+  waterfront: null,
+  pricebin: null,
+};
+function matchesFilters(row) {
+  if (filters.zipcode !== null && row.zipcode !== filters.zipcode) return false;
+  if (filters.yr_min  !== null && row.yr_built  < filters.yr_min)   return false;
+  if (filters.bedrooms!== null && row.bedrooms !== filters.bedrooms) return false;
+  if (filters.grade_min !== null && row.grade < filters.grade_min)  return false;
+  if (filters.waterfront !== null && row.waterfront !== filters.waterfront) return false;
+  if (filters.pricebin !== null) {
+    const [lo, hi] = filters.pricebin;
+    if (row.price < lo || row.price > hi) return false;
+  }
+  return true;
+}
+function filteredScatter() { return DATA.scatter.filter(matchesFilters); }
+function filteredZipcodes() {
+  if (filters.zipcode !== null) return DATA.zipcodes.filter(z => z.zipcode === filters.zipcode);
+  return DATA.zipcodes;
+}
+
+
+/* =====================================================================
+   KPI RENDER
+   ===================================================================== */
+function renderKPIs() {
+  const k = DATA.kpis;
+  const cards = [
+    { l: "Listings",              v: fmt(k.n_listings, "int") },
+    { l: "Zipcodes",              v: fmt(k.n_zipcodes, "int") },
+    { l: "Median price",          v: fmt(k.median_price, "money") },
+    { l: "Mean price",            v: fmt(k.mean_price, "money") },
+    { l: "Median $/sqft",         v: fmt(k.median_ppsf, "money") },
+    { l: "Median grade",          v: fmt(k.median_grade, "float") },
+    { l: "Median age (yrs)",      v: fmt(k.median_age, "int") },
+    { l: "% waterfront",          v: fmt(k.pct_waterfront, "pct") },
+    { l: "% renovated",           v: fmt(k.pct_renovated, "pct") },
+    { l: "Date range",            v: k.date_min.slice(0,7) + " → " + k.date_max.slice(0,7) },
+  ];
+  document.getElementById("kpis").innerHTML = cards.map(c =>
+    `<div class="kpi"><div class="label">${c.l}</div><div class="val">${c.v}</div></div>`
+  ).join("");
+  document.getElementById("meta-line").textContent =
+    `${k.n_listings.toLocaleString()} sales · ${k.n_zipcodes} zipcodes · ${k.date_min} → ${k.date_max}`;
+  document.getElementById("meta-source").textContent = DATA.meta.source;
+  document.getElementById("meta-rows").textContent = DATA.meta.n_rows.toLocaleString();
+  document.getElementById("meta-time").textContent = DATA.meta.generated_at.slice(0,16).replace("T", " ") + " UTC";
+}
+
+
+/* =====================================================================
+   MAP
+   ===================================================================== */
+let map, choroLayer, pointsLayer, legendCtrl;
+function initMap() {
+  map = L.map("map", { preferCanvas: true }).setView([47.55, -122.15], 10);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap",
+    maxZoom: 18,
+  }).addTo(map);
+
+  legendCtrl = L.control({ position: "bottomright" });
+  legendCtrl.onAdd = () => {
+    const div = L.DomUtil.create("div", "legend");
+    div.id = "legend";
+    return div;
+  };
+  legendCtrl.addTo(map);
+
+  document.getElementById("map-metric").onchange = renderMap;
+  document.getElementById("map-layer").onchange = renderMap;
+  renderMap();
+}
+
+function renderMap() {
+  const metric = document.getElementById("map-metric").value;
+  const mode   = document.getElementById("map-layer").value;
+
+  const vals = DATA.zipcodes.map(z => z[metric]).filter(v => isFinite(v));
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+
+  if (choroLayer)  { map.removeLayer(choroLayer);  choroLayer = null; }
+  if (pointsLayer) { map.removeLayer(pointsLayer); pointsLayer = null; }
+
+  if (mode === "choropleth" || mode === "both") {
+    const features = DATA.zipcodes
+      .filter(z => z.polygon && z.polygon.length >= 3)
+      .map(z => ({
+        type: "Feature",
+        properties: z,
+        geometry: { type: "Polygon", coordinates: [z.polygon] },
+      }));
+    choroLayer = L.geoJSON({ type: "FeatureCollection", features }, {
+      style: f => {
+        const v = f.properties[metric];
+        const t = hi === lo ? 0.5 : (v - lo) / (hi - lo);
+        const isSelected = filters.zipcode === f.properties.zipcode;
+        return {
+          fillColor: rampColor(t),
+          fillOpacity: 0.65,
+          color: isSelected ? cssvar("--negative") : cssvar("--border-str"),
+          weight: isSelected ? 3 : 0.7,
+        };
+      },
+      onEachFeature: (f, layer) => {
+        const p = f.properties;
+        layer.bindTooltip(
+          `<b>${p.zipcode}</b><br>` +
+          `n: ${p.n}<br>` +
+          `median: ${fmt(p.median_price, "money")}<br>` +
+          `$/sqft: ${fmt(p.median_ppsf, "money")}<br>` +
+          `grade: ${p.median_grade.toFixed(1)} · age: ${p.median_age.toFixed(0)}`,
+          { sticky: true, className: "zc-tip" }
+        );
+        layer.on("click", () => {
+          filters.zipcode = (filters.zipcode === p.zipcode) ? null : p.zipcode;
+          rerenderAll();
+        });
+      },
+    }).addTo(map);
+  }
+
+  if (mode === "points" || mode === "both") {
+    const pts = filteredScatter();
+    pointsLayer = L.layerGroup(
+      pts.map(p => {
+        const t = (p.price - DATA.kpis.median_price/3) / (DATA.kpis.mean_price * 3);
+        return L.circleMarker([p.lat, p.long], {
+          radius: 3,
+          fillColor: rampColor(Math.max(0, Math.min(1, t))),
+          color: "transparent",
+          fillOpacity: 0.6,
+        }).bindTooltip(
+          `${fmt(p.price, "money")} · ${p.bedrooms}br/${p.bathrooms}ba · ${p.sqft_living} sqft · zip ${p.zipcode}`,
+          { sticky: false }
+        );
+      })
+    ).addTo(map);
+  }
+
+  renderLegend(metric, lo, hi);
+}
+
+function renderLegend(metric, lo, hi) {
+  const div = document.getElementById("legend");
+  if (!div) return;
+  const label = ({
+    median_price: "median price",
+    median_ppsf:  "median $/sqft",
+    n:            "listings",
+    median_grade: "median grade",
+    median_age:   "median age",
+    pct_waterfront: "% waterfront",
+  })[metric] || metric;
+  const stops = [];
+  for (let i = 0; i < 10; i++) stops.push(`<div style="background:${rampColor(i/9)}"></div>`);
+  const fmtKind = (metric === "median_price" || metric === "median_ppsf") ? "money"
+                  : (metric === "n") ? "int"
+                  : (metric === "pct_waterfront") ? "pct" : "float";
+  div.innerHTML =
+    `<div><b>${label}</b></div>
+     <div class="scale">${stops.join("")}</div>
+     <div class="labels"><span>${fmt(lo, fmtKind)}</span><span>${fmt(hi, fmtKind)}</span></div>`;
+}
+
+
+/* =====================================================================
+   CHARTS — KPIs, target, temporal, scatter, corr, features
+   ===================================================================== */
+const charts = {};
+
+function commonOpts() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { labels: { color: cssvar("--text-pri"), font: { size: 11 } } },
+      tooltip: { titleColor: "#fff", bodyColor: "#fff" },
+    },
+    scales: {
+      x: { ticks: { color: cssvar("--text-sec"), font: { size: 10 } }, grid: { color: cssvar("--border") } },
+      y: { ticks: { color: cssvar("--text-sec"), font: { size: 10 } }, grid: { color: cssvar("--border") } },
+    },
+  };
+}
+
+function buildHistogram(canvasId, dist, label, color) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  const labels = dist.bin_edges.slice(0, -1).map(e => {
+    if (Math.abs(e) >= 1e6) return (e/1e6).toFixed(1) + "M";
+    if (Math.abs(e) >= 1e3) return (e/1e3).toFixed(0) + "k";
+    return e.toFixed(1);
+  });
+  return new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{
+      label, data: dist.counts, backgroundColor: color, borderWidth: 0, categoryPercentage: 1.0, barPercentage: 1.0,
+    }] },
+    options: { ...commonOpts(), plugins: { ...commonOpts().plugins, legend: { display: false } } }
+  });
+}
+
+function renderTargetCharts() {
+  if (charts.priceHist) charts.priceHist.destroy();
+  if (charts.logHist)   charts.logHist.destroy();
+  charts.priceHist = buildHistogram("ch-price-hist", DATA.distributions.price,
+                                    "price", cssvar("--c1"));
+  charts.logHist   = buildHistogram("ch-logprice-hist", DATA.distributions.log_price,
+                                    "log10(price)", cssvar("--c3"));
+}
+
+function renderMonthly() {
+  const t = DATA.temporal.monthly;
+  if (charts.monthly) charts.monthly.destroy();
+  const ctx = document.getElementById("ch-monthly").getContext("2d");
+  charts.monthly = new Chart(ctx, {
+    data: {
+      labels: t.month,
+      datasets: [
+        { type: "bar",  label: "sales",        data: t.n,
+          backgroundColor: cssvar("--c1"), yAxisID: "y" },
+        { type: "line", label: "median price", data: t.median_price,
+          borderColor: cssvar("--c2"), backgroundColor: "transparent",
+          tension: 0.3, yAxisID: "y1", pointRadius: 2 },
+      ],
+    },
+    options: {
+      ...commonOpts(),
+      scales: {
+        x: { ticks: { color: cssvar("--text-sec"), font: { size: 10 } }, grid: { color: cssvar("--border") } },
+        y:  { position: "left",  ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") }, title: { display: true, text: "n sales", color: cssvar("--text-sec") } },
+        y1: { position: "right", ticks: { color: cssvar("--text-sec"), callback: v => "$" + (v/1000).toFixed(0) + "k" }, grid: { drawOnChartArea: false }, title: { display: true, text: "median $", color: cssvar("--text-sec") } },
+      }
+    }
+  });
+}
+
+function renderYearBuilt() {
+  const t = DATA.temporal.yr_built_decade;
+  if (charts.yb) charts.yb.destroy();
+  const ctx = document.getElementById("ch-yearbuilt").getContext("2d");
+  charts.yb = new Chart(ctx, {
+    data: {
+      labels: t.decade,
+      datasets: [
+        { type: "bar",  label: "n",           data: t.n,
+          backgroundColor: cssvar("--c5"), yAxisID: "y" },
+        { type: "line", label: "median price", data: t.median_price,
+          borderColor: cssvar("--c2"), tension: 0.2, yAxisID: "y1", pointRadius: 2 },
+        { type: "line", label: "median $/sqft", data: t.median_ppsf,
+          borderColor: cssvar("--c3"), tension: 0.2, yAxisID: "y2", pointRadius: 2, borderDash: [4,4] },
+      ],
+    },
+    options: {
+      ...commonOpts(),
+      scales: {
+        x: { ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") } },
+        y:  { position: "left",  ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") } },
+        y1: { position: "right", ticks: { color: cssvar("--text-sec"), callback: v => "$" + (v/1000).toFixed(0) + "k" }, grid: { drawOnChartArea: false } },
+        y2: { display: false },
+      }
+    }
+  });
+}
+
+function renderWeekday() {
+  const t = DATA.temporal.weekday;
+  if (charts.wd) charts.wd.destroy();
+  const ctx = document.getElementById("ch-weekday").getContext("2d");
+  charts.wd = new Chart(ctx, {
+    type: "bar",
+    data: { labels: t.sale_weekday, datasets: [{
+      label: "sales", data: t.n, backgroundColor: cssvar("--c4"),
+    }] },
+    options: { ...commonOpts(), plugins: { ...commonOpts().plugins, legend: { display: false } } }
+  });
+}
+
+function renderScatter() {
+  const xKey = document.getElementById("sc-x").value;
+  const yKey = document.getElementById("sc-y").value;
+  const cKey = document.getElementById("sc-color").value;
+  const rows = filteredScatter();
+  const cVals = rows.map(r => r[cKey]);
+  const cMin = Math.min(...cVals), cMax = Math.max(...cVals);
+  const data = rows.map(r => ({
+    x: r[xKey], y: r[yKey],
+    backgroundColor: rampColor(cMax === cMin ? 0.5 : (r[cKey] - cMin) / (cMax - cMin)),
+    _meta: r,
+  }));
+  if (charts.scatter) charts.scatter.destroy();
+  const ctx = document.getElementById("ch-scatter").getContext("2d");
+  charts.scatter = new Chart(ctx, {
+    type: "scatter",
+    data: { datasets: [{
+      label: `${xKey} vs ${yKey}`, data,
+      pointBackgroundColor: data.map(d => d.backgroundColor),
+      pointRadius: 2.5, pointHoverRadius: 5,
+      borderColor: "transparent",
+    }] },
+    options: {
+      ...commonOpts(),
+      plugins: {
+        ...commonOpts().plugins,
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: c => {
+            const m = c.raw._meta;
+            return [
+              `${xKey}: ${c.parsed.x}`,
+              `${yKey}: ${c.parsed.y}`,
+              `${cKey}: ${m[cKey]}`,
+              `zip: ${m.zipcode}, grade: ${m.grade}`,
+            ];
+          }
+        }}
+      },
+      scales: {
+        x: { title: { display: true, text: featLabel(xKey), color: cssvar("--text-sec") },
+             ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") } },
+        y: { title: { display: true, text: featLabel(yKey), color: cssvar("--text-sec") },
+             ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") } },
+      },
+    }
+  });
+}
+
+function renderCorrBar() {
+  const { keys, matrix } = DATA.correlations;
+  const priceIdx = keys.indexOf("price");
+  const pairs = keys.map((k, i) => ({ k, r: matrix[priceIdx][i] }))
+                    .filter(p => p.k !== "price" && p.k !== "log_price")
+                    .sort((a,b) => Math.abs(b.r) - Math.abs(a.r));
+  if (charts.corrBar) charts.corrBar.destroy();
+  const ctx = document.getElementById("ch-corrbar").getContext("2d");
+  charts.corrBar = new Chart(ctx, {
+    type: "bar",
+    data: { labels: pairs.map(p => p.k), datasets: [{
+      data: pairs.map(p => p.r),
+      backgroundColor: pairs.map(p => corrColor(p.r)),
+    }] },
+    options: {
+      ...commonOpts(),
+      indexAxis: "y",
+      plugins: { ...commonOpts().plugins, legend: { display: false } },
+      scales: {
+        x: { min: -1, max: 1, ticks: { color: cssvar("--text-sec") }, grid: { color: cssvar("--border") } },
+        y: { ticks: { color: cssvar("--text-sec"), font: { size: 10 } }, grid: { color: cssvar("--border") } },
+      }
+    }
+  });
+}
+
+function renderCorrMatrix() {
+  const { keys, matrix } = DATA.correlations;
+  const grid = document.getElementById("corr-matrix");
+  const n = keys.length;
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = `90px repeat(${n}, minmax(34px, 1fr))`;
+  grid.className = "corr-grid";
+  let html = "";
+  html += `<div class="corr-cell h"></div>`;
+  keys.forEach(k => html += `<div class="corr-cell h r">${k}</div>`);
+  matrix.forEach((row, i) => {
+    html += `<div class="corr-cell h" style="text-align:left">${keys[i]}</div>`;
+    row.forEach(r => {
+      html += `<div class="corr-cell" style="background:${corrColor(r)}; color: ${Math.abs(r) > 0.5 ? "#fff" : "var(--text-pri)"}">${r.toFixed(2)}</div>`;
+    });
+  });
+  grid.innerHTML = html;
+}
+
+function renderFeatureGrid() {
+  const grid = document.getElementById("feature-grid");
+  const dists = DATA.distributions;
+  const feats = DATA.features;
+  const order = Object.keys(dists);
+  grid.innerHTML = order.map(k => {
+    const skew = dists[k].skew;
+    const flag = Math.abs(skew) > 1 ? `<span class="dot" style="background:${cssvar("--c4")}"></span>` : "";
+    return `<div class="feature-card">
+      <div class="fname">${k}</div>
+      <div class="flabel">${feats[k]?.label || ""}</div>
+      <div class="fchart"><canvas id="fc-${k}"></canvas></div>
+      <div class="fmeta"><span>n bins ${dists[k].counts.length}</span><span>${flag}skew ${skew.toFixed(2)}</span></div>
+    </div>`;
+  }).join("");
+  // Render mini-charts
+  order.forEach(k => {
+    const d = dists[k];
+    const ctx = document.getElementById("fc-" + k).getContext("2d");
+    new Chart(ctx, {
+      type: "bar",
+      data: { labels: d.counts.map((_, i) => i), datasets: [{
+        data: d.counts, backgroundColor: cssvar("--c1"), borderWidth: 0, categoryPercentage: 1.0, barPercentage: 1.0,
+      }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+      }
+    });
+  });
+}
+
+function renderOutliers() {
+  const o = DATA.outliers;
+  let html = `<table class="dt"><thead><tr>
+    <th>feature</th><th>median</th><th>q1</th><th>q3</th><th>min</th><th>max</th>
+    <th>fences (k=3)</th><th>flagged</th><th>% flagged</th>
+  </tr></thead><tbody>`;
+  Object.keys(o).forEach(k => {
+    const r = o[k];
+    const isMoney = k.includes("price") || k.includes("ppsf");
+    const f = (v) => isMoney ? fmt(v, "money") : fmt(v, "int");
+    html += `<tr>
+      <td><b>${k}</b><br><span style="color:var(--text-mute); font-size:10px">${DATA.features[k]?.label || ""}</span></td>
+      <td>${f(r.median)}</td><td>${f(r.q1)}</td><td>${f(r.q3)}</td>
+      <td>${f(r.min)}</td><td>${f(r.max)}</td>
+      <td>${f(r.lower_fence)} – ${f(r.upper_fence)}</td>
+      <td>${r.n_flagged.toLocaleString()}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div class="outlier-bar" style="flex:1;"><div class="fill" style="width:${Math.min(100, r.pct_flagged*4)}%;"></div></div>
+          <span>${r.pct_flagged.toFixed(2)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  document.getElementById("outlier-table").innerHTML = html;
+}
+
+let zipSort = { col: "median_price", dir: "desc" };
+function renderZipTable() {
+  const rows = filteredZipcodes().slice();
+  rows.sort((a,b) => {
+    const va = a[zipSort.col], vb = b[zipSort.col];
+    return zipSort.dir === "asc" ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+  const cols = [
+    { k: "zipcode",       l: "zipcode",         f: v => v },
+    { k: "n",             l: "listings",        f: v => v.toLocaleString() },
+    { k: "median_price",  l: "median price",    f: v => fmt(v, "money") },
+    { k: "median_ppsf",   l: "median $/sqft",   f: v => fmt(v, "money") },
+    { k: "median_sqft",   l: "median sqft",     f: v => fmt(v, "int") },
+    { k: "median_grade",  l: "median grade",    f: v => v.toFixed(1) },
+    { k: "median_age",    l: "median age",      f: v => v.toFixed(0) },
+    { k: "pct_waterfront",l: "% waterfront",    f: v => v.toFixed(1) + "%" },
+    { k: "pct_renovated", l: "% renovated",     f: v => v.toFixed(1) + "%" },
+  ];
+  const arrow = c => zipSort.col === c ? (zipSort.dir === "asc" ? " ▲" : " ▼") : "";
+  let html = "<thead><tr>" + cols.map(c =>
+    `<th data-col="${c.k}">${c.l}${arrow(c.k)}</th>`
+  ).join("") + "</tr></thead><tbody>";
+  rows.forEach(r => {
+    html += "<tr>" + cols.map(c => `<td>${c.f(r[c.k])}</td>`).join("") + "</tr>";
+  });
+  html += "</tbody>";
+  const t = document.getElementById("zip-table");
+  t.innerHTML = html;
+  t.querySelectorAll("thead th").forEach(th => {
+    th.onclick = () => {
+      const col = th.dataset.col;
+      zipSort.dir = (zipSort.col === col && zipSort.dir === "desc") ? "asc" : "desc";
+      zipSort.col = col;
+      renderZipTable();
+    };
+  });
+}
+
+
+/* =====================================================================
+   FEATURE LABEL LOOKUP
+   ===================================================================== */
+function featLabel(k) {
+  const f = DATA.features[k];
+  return f ? `${k} (${f.label})` : k;
+}
+
+/* =====================================================================
+   FILTERS WIRING
+   ===================================================================== */
+function buildFilterDropdowns() {
+  const beds = [...new Set(DATA.scatter.map(r => r.bedrooms))].sort((a,b)=>a-b);
+  const sel = document.getElementById("f-beds");
+  beds.forEach(v => { const o=document.createElement("option"); o.value=v; o.textContent=v; sel.appendChild(o); });
+
+  const grades = [...new Set(DATA.scatter.map(r => r.grade))].sort((a,b)=>a-b);
+  const g = document.getElementById("f-grade-min");
+  grades.forEach(v => { const o=document.createElement("option"); o.value=v; o.textContent="≥"+v; g.appendChild(o); });
+
+  // Scatter pickers
+  const featOptions = Object.keys(DATA.features)
+    .filter(k => DATA.features[k].dtype !== "cat" && k in (DATA.scatter[0] || {}))
+    .map(k => `<option value="${k}">${k} (${DATA.features[k].label})</option>`)
+    .join("");
+  const xs = document.getElementById("sc-x");
+  const ys = document.getElementById("sc-y");
+  xs.innerHTML = featOptions;
+  ys.innerHTML = featOptions;
+  xs.value = "sqft_living";
+  ys.value = "price";
+}
+
+function wireFilters() {
+  const upd = (id, key, parser=v=>v===""?null:+v) => {
+    document.getElementById(id).addEventListener("change", e => {
+      filters[key] = parser(e.target.value);
+      rerenderAll();
+    });
+  };
+  upd("f-yr-min", "yr_min");
+  upd("f-beds", "bedrooms");
+  upd("f-grade-min", "grade_min");
+  upd("f-water", "waterfront");
+  document.getElementById("f-pricebin").addEventListener("change", e => {
+    if (e.target.value === "") filters.pricebin = null;
+    else filters.pricebin = e.target.value.split("-").map(Number);
+    rerenderAll();
+  });
+  ["sc-x","sc-y","sc-color"].forEach(id =>
+    document.getElementById(id).addEventListener("change", renderScatter));
+  document.getElementById("reset").onclick = () => {
+    Object.keys(filters).forEach(k => filters[k] = null);
+    ["f-yr-min","f-beds","f-grade-min","f-water","f-pricebin"].forEach(i =>
+      document.getElementById(i).value = "");
+    rerenderAll();
+  };
+}
+
+
+/* =====================================================================
+   ORCHESTRATION
+   ===================================================================== */
+function rerenderAll() {
+  renderMap();
+  renderScatter();
+  renderZipTable();
+}
+
+window._kc = {
+  rerenderForTheme() {
+    // Theme change: rebuild colour-dependent charts
+    renderTargetCharts();
+    renderMonthly();
+    renderYearBuilt();
+    renderWeekday();
+    renderScatter();
+    renderCorrBar();
+    renderCorrMatrix();
+    renderFeatureGrid();
+    if (map) renderMap();
+  }
+};
+
+function boot() {
+  renderKPIs();
+  buildFilterDropdowns();
+  wireFilters();
+  initMap();
+  renderTargetCharts();
+  renderMonthly();
+  renderYearBuilt();
+  renderWeekday();
+  renderScatter();
+  renderCorrBar();
+  renderCorrMatrix();
+  renderFeatureGrid();
+  renderOutliers();
+  renderZipTable();
+}
+boot();
+</script>
+</body>
+</html>
