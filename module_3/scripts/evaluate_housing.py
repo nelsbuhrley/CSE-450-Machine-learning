@@ -54,21 +54,21 @@ def load_answers(path: Path | str | None = None) -> pd.DataFrame:
 
 def evaluate_predictions(
     answers: pd.DataFrame,
-    predictions_path: Path | str,
+    predictions: "Path | str | pd.DataFrame | np.ndarray",
     label: str | None = None,
 ) -> dict:
     """
-    Evaluate a single predictions CSV against the answer key.
+    Evaluate predictions against the answer key.
 
     Parameters
     ----------
     answers : DataFrame
         The answer key (from load_answers()).
-    predictions_path : Path or str
-        Path to a CSV with a single column of predicted prices.
+    predictions : Path, str, DataFrame, or ndarray
+        Predictions as a CSV path, a single-column DataFrame, or a numpy array.
     label : str, optional
         Human-readable label for this prediction set.
-        Defaults to the filename stem.
+        Defaults to the filename stem when a path is given, else 'predictions'.
 
     Returns
     -------
@@ -77,11 +77,19 @@ def evaluate_predictions(
         within_5_pct, within_10_pct, within_20_pct,
         detail  (DataFrame with per-row comparison)
     """
-    predictions_path = Path(predictions_path)
-    if label is None:
-        label = predictions_path.stem
-
-    preds = pd.read_csv(predictions_path)
+    if isinstance(predictions, np.ndarray):
+        preds = pd.DataFrame({"price": predictions})
+        if label is None:
+            label = "predictions"
+    elif isinstance(predictions, pd.DataFrame):
+        preds = predictions.copy()
+        if label is None:
+            label = "predictions"
+    else:
+        predictions = Path(predictions)
+        if label is None:
+            label = predictions.stem
+        preds = pd.read_csv(predictions)
 
     if preds.shape[0] != answers.shape[0]:
         raise ValueError(
@@ -208,6 +216,9 @@ def plot_results(results: list[dict]) -> None:
             data=detail, x="actual", y="predicted", hue="bucket", palette=palette,
         )
         ax.plot(lim, lim, color="red", linewidth=1, label="perfect")
+        # 20% error bands.
+        ax.plot(lim, (lim[0] * 1.2, lim[1] * 1.2), color="gray", linestyle="--", linewidth=1, label="+20%")
+        ax.plot(lim, (lim[0] * 0.8, lim[1] * 0.8), color="gray", linestyle=":", linewidth=1, label="-20%")
         ax.set(xlim=lim, ylim=lim)
         ax.set_title(r["label"])
         ax.set_xlabel("Actual Price")
