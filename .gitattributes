@@ -1,0 +1,5 @@
+*.html linguist-generated
+*.js linguist-generated
+*.css linguist-generated
+*.json linguist-generated
+*.csv linguist-generated
