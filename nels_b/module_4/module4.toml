@@ -1,0 +1,24 @@
+# Sweep config for module4.py.  Run: python module4.py --sweep --config module4.toml
+# CLI --jobs / --effort override the values here.
+
+n_jobs = 4       # parallel workers
+effort = 6       # 1 = tiny/fast .. 10 = large (~half the speed of old model 4)
+epochs = 1000    # max epochs (EarlyStopping usually stops sooner)
+base_lr = 0.05  # learning rate at ref_batch; each model scales lr ∝ batch_size
+ref_batch = 1024 # batch size that maps to base_lr and width unit u0
+save_dir = "artifacts/models_v2" # folder to write each trained model (run sweeps from module_4/)
+visualize = true    # plot metrics, val-loss curves, and best-model fit after the sweep
+
+# Each [[models]] is one build. widths and learning_rate are derived from
+# batch_size (equal compute + matched learning rate) unless set explicitly.
+[[models]]
+batch_size = 256
+dropout = 0.2
+
+[[models]]
+batch_size = 512
+dropout = 0.25
+
+[[models]]
+batch_size = 1024
+dropout = 0.2
