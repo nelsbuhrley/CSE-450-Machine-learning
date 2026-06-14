@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTSRB — model results</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+  h1 { font-size: 1.4rem; margin-bottom: .2rem; }
+  h2 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: #666; font-size: .85rem; margin-bottom: 1rem; }
+  table { border-collapse: collapse; width: 100%; max-width: 760px; font-size: .9rem; }
+  th, td { padding: .35rem .6rem; text-align: right; border-bottom: 1px solid #e5e5e5; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { border-bottom: 2px solid #333; }
+  .best td { background: #eef7ee; font-weight: 600; }
+  .final td { background: #e7f0fb; font-weight: 700; }
+  caption { text-align: left; color: #888; font-size: .8rem; padding-bottom: .3rem; }
+</style>
+</head>
+<body>
+
+<h1>GTSRB traffic-sign — holdout results</h1>
+<p class="note">Holdout = mini_holdout, 201 images. Val = own validation split.</p>
+
+<h2>1 &middot; Early models — leaky per-image split</h2>
+<table>
+  <thead><tr><th>Model</th><th>Input</th><th>Val</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <tbody>
+    <tr><td>run1 &middot; smallcnn</td><td>48px</td><td>99.97%</td><td>97.01%</td><td>98.01%</td><td>6</td></tr>
+    <tr class="best"><td>run2 &middot; smallcnn</td><td>100px</td><td>99.95%</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr><td>resnet18</td><td>100px</td><td>99.95%</td><td>96.52%</td><td>97.51%</td><td>7</td></tr>
+  </tbody>
+</table>
+
+<h2>2 &middot; Grouped models — honest track split</h2>
+<table>
+  <caption>grouped mobilenet was removed; 2 models + their ensemble</caption>
+  <thead><tr><th>Model</th><th>Input</th><th>Val</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <tbody>
+    <tr class="best"><td>grouped smallcnn</td><td>48px</td><td>99.20%</td><td>97.01%</td><td>99.50%</td><td>6</td></tr>
+    <tr><td>grouped resnet18</td><td>100px</td><td>99.37%</td><td>94.03%</td><td>97.51%</td><td>12</td></tr>
+    <tr><td>ensemble (smallcnn + resnet18)</td><td>&mdash;</td><td>&mdash;</td><td>96.02%</td><td>99.50%</td><td>8</td></tr>
+  </tbody>
+</table>
+
+<h2>3 &middot; STN models — honest track split</h2>
+<table>
+  <thead><tr><th>Model</th><th>Input</th><th>Val</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <tbody>
+    <tr class="best"><td>STN smallcnn</td><td>48px</td><td>99.14%</td><td>98.01%</td><td>99.50%</td><td>4</td></tr>
+    <tr><td>STN smallcnn</td><td>64px</td><td>98.51%</td><td>96.52%</td><td>98.01%</td><td>7</td></tr>
+    <tr><td>STN resnet18</td><td>64px</td><td>99.59%</td><td>96.02%</td><td>96.52%</td><td>8</td></tr>
+    <tr><td>STN mobilenet</td><td>64px</td><td>91.12%</td><td>89.55%</td><td>94.53%</td><td>21</td></tr>
+  </tbody>
+</table>
+
+<h2>4 &middot; Final ensembles (with run2)</h2>
+<table>
+  <caption>run2@100 dominates; 48px models are dead weight in the vote</caption>
+  <thead><tr><th>Ensemble</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <tbody>
+    <tr class="final"><td>run2 + grouped smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="best"><td>run2 alone</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr><td>run2 + STN smallcnn@48 + grouped smallcnn@48</td><td>99.00%</td><td>100.00%</td><td>2</td></tr>
+    <tr><td>STN smallcnn@48 + grouped smallcnn@48 (prev)</td><td>98.01%</td><td>100.00%</td><td>4</td></tr>
+  </tbody>
+</table>
+<p class="note">run2's only miss is 00039.jpg (near-black 120km/h &rarr; 80) &mdash; a brightness failure no ensembling here fixes.</p>
+
+</body>
+</html>
