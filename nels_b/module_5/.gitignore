@@ -1,0 +1,15 @@
+# Training data (39k images, regenerable) and model artifacts
+training/
+models/
+logs/
+holdout/
+mini_holdout/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS cruft
+.DS_Store
+**/.DS_Store
