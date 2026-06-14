@@ -26,8 +26,8 @@
 <table>
   <thead><tr><th>Model</th><th>Input</th><th>Val</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
   <tbody>
-    <tr><td>run1 &middot; smallcnn</td><td>48px</td><td>99.97%</td><td>97.01%</td><td>98.01%</td><td>6</td></tr>
-    <tr class="best"><td>run2 &middot; smallcnn</td><td>100px</td><td>99.95%</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr><td>run1 &middot; smallcnn (random split)</td><td>48px</td><td>99.97%</td><td>97.01%</td><td>98.01%</td><td>6</td></tr>
+    <tr class="best"><td>run2 &middot; smallcnn (random split)</td><td>100px</td><td>99.95%</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
     <tr><td>resnet18</td><td>100px</td><td>99.95%</td><td>96.52%</td><td>97.51%</td><td>7</td></tr>
   </tbody>
 </table>
@@ -72,9 +72,9 @@
   <caption>run2@100 dominates; 00039.jpg (near-black sign) is the irreducible miss</caption>
   <thead><tr><th>Ensemble</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
   <tbody>
-    <tr class="final"><td>run2 + grouped smallcnn@48 + STN+CLAHE smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
-    <tr class="final"><td>run2 + grouped smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
-    <tr class="best"><td>run2 alone</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="final"><td>smallcnn@100 (random) + grouped smallcnn@48 + STN+CLAHE smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="final"><td>smallcnn@100 (random) + grouped smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="best"><td>smallcnn@100 (random split) alone</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
     <tr><td>STN+CLAHE smallcnn@48 + grouped smallcnn@48</td><td>99.00%</td><td>99.50%</td><td>2</td></tr>
     <tr><td>STN+CLAHE smallcnn@48 alone</td><td>99.00%</td><td>99.50%</td><td>2</td></tr>
     <tr><td>STN smallcnn@48 + grouped smallcnn@48</td><td>98.01%</td><td>100.00%</td><td>4</td></tr>
