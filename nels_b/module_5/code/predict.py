@@ -26,7 +26,7 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torchvision.transforms import v2
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from train import build_model
+from train import build_model, CLAHE
 
 
 def load_answers(path):
@@ -36,13 +36,16 @@ def load_answers(path):
     return files, y
 
 
-def transform_for(img_size):
-    return v2.Compose([
-        v2.Resize((img_size, img_size)),
+def transform_for(img_size, clahe=None):
+    steps = [v2.Resize((img_size, img_size))]
+    if clahe is not None:
+        steps.append(clahe)
+    steps += [
         v2.PILToTensor(),
         v2.ToDtype(torch.float32, scale=True),
         v2.Normalize([0.5] * 3, [0.5] * 3),
-    ])
+    ]
+    return v2.Compose(steps)
 
 
 @torch.no_grad()
@@ -51,7 +54,8 @@ def model_probs(ckpt_path, files, images_dir, device):
     a = ckpt["args"]
     name, img_size, classes = a["model"], a["img_size"], ckpt["classes"]
     stn = a.get("stn", False)
-    tf = transform_for(img_size)
+    clahe = CLAHE(a.get("clahe_clip", 2.0), a.get("clahe_tiles", 4)) if a.get("clahe", False) else None
+    tf = transform_for(img_size, clahe)
     x = torch.stack([tf(Image.open(Path(images_dir) / f).convert("RGB")) for f in files])
 
     model = build_model(name, len(classes), stn=stn).to(device).eval()
@@ -60,7 +64,7 @@ def model_probs(ckpt_path, files, images_dir, device):
     for i in range(0, len(x), 256):
         out = model(x[i:i + 256].to(device))
         probs.append(torch.softmax(out, dim=1).cpu())
-    tag = f"{name}@{img_size}" + ("+stn" if stn else "")
+    tag = f"{name}@{img_size}" + ("+stn" if stn else "") + ("+clahe" if clahe is not None else "")
     return torch.cat(probs).numpy(), tag, img_size
 
 

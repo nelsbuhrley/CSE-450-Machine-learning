@@ -30,6 +30,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from PIL import Image
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
 from torchvision.transforms import v2
@@ -125,6 +126,67 @@ def build_model(name: str, num_classes: int, stn: bool = False) -> nn.Module:
 
 
 # --------------------------------------------------------------------------- #
+# Preprocessing
+# --------------------------------------------------------------------------- #
+def _clahe_gray(y, clip_limit, n_tiles):
+    """Contrast-Limited Adaptive Histogram Equalization on one uint8 channel.
+
+    Tiles the image n_tiles x n_tiles, builds a clipped-CDF mapping per tile, then
+    bilinearly interpolates the four surrounding tile mappings at each pixel (the
+    "interpolation" step that removes the blocky look of plain adaptive HE).
+    """
+    H, W = y.shape
+    ty = tx = n_tiles
+    ph, pw = (-H) % ty, (-W) % tx
+    if ph or pw:
+        y = np.pad(y, ((0, ph), (0, pw)), mode="reflect")
+    Hp, Wp = y.shape
+    th, tw = Hp // ty, Wp // tx
+    clip = max(1.0, clip_limit * (th * tw) / 256.0)
+
+    lut = np.empty((ty, tx, 256), dtype=np.float32)
+    for i in range(ty):
+        for j in range(tx):
+            tile = y[i * th:(i + 1) * th, j * tw:(j + 1) * tw]
+            hist = np.bincount(tile.ravel(), minlength=256).astype(np.float32)
+            excess = np.maximum(hist - clip, 0.0).sum()
+            hist = np.minimum(hist, clip) + excess / 256.0   # clip + redistribute
+            cdf = np.cumsum(hist)
+            lut[i, j] = cdf / cdf[-1] * 255.0
+
+    yc = np.clip(np.arange(Hp) / th - 0.5, 0, ty - 1)
+    xc = np.clip(np.arange(Wp) / tw - 0.5, 0, tx - 1)
+    i0 = np.floor(yc).astype(int); i1 = np.minimum(i0 + 1, ty - 1); fy = (yc - i0).astype(np.float32)
+    j0 = np.floor(xc).astype(int); j1 = np.minimum(j0 + 1, tx - 1); fx = (xc - j0).astype(np.float32)
+    v = y.astype(int)
+    A = lut[i0[:, None], j0[None, :], v]; B = lut[i0[:, None], j1[None, :], v]
+    C = lut[i1[:, None], j0[None, :], v]; D = lut[i1[:, None], j1[None, :], v]
+    top = A * (1 - fx)[None, :] + B * fx[None, :]
+    bot = C * (1 - fx)[None, :] + D * fx[None, :]
+    out = top * (1 - fy)[:, None] + bot * fy[:, None]
+    return np.clip(np.rint(out), 0, 255).astype(np.uint8)[:H, :W]
+
+
+class CLAHE:
+    """PIL RGB -> PIL RGB. Equalizes only the luminance (Y) channel so colors are
+    preserved; brightens dark/backlit signs and normalizes local contrast. Inserted
+    right after Resize in every pipeline (train cache, streaming, and inference)."""
+
+    def __init__(self, clip_limit=2.0, n_tiles=4):
+        self.clip_limit = float(clip_limit)
+        self.n_tiles = int(n_tiles)
+
+    def __call__(self, img):
+        ycbcr = np.asarray(img.convert("YCbCr")).copy()
+        ycbcr[..., 0] = _clahe_gray(ycbcr[..., 0], self.clip_limit, self.n_tiles)
+        return Image.fromarray(ycbcr, "YCbCr").convert("RGB")
+
+
+def make_clahe(args):
+    return CLAHE(args.clahe_clip, args.clahe_tiles) if args.clahe else None
+
+
+# --------------------------------------------------------------------------- #
 # Data
 # --------------------------------------------------------------------------- #
 class CachedTensorDataset(Dataset):
@@ -156,9 +218,16 @@ def _track_id(path, cls):
     return f"{cls}:{track}"
 
 
-def _preload(data_dir, img_size, workers):
-    """Decode + resize every image once into one uint8 tensor (the slow part, done once)."""
-    pre = v2.Compose([v2.Resize((img_size, img_size)), v2.PILToTensor()])
+def _preload(data_dir, img_size, workers, clahe=None):
+    """Decode + resize (+ optional CLAHE) every image once into one uint8 tensor.
+
+    CLAHE is baked into the cache here (a deterministic preprocess, not augmentation),
+    so it's computed once rather than every epoch."""
+    steps = [v2.Resize((img_size, img_size))]
+    if clahe is not None:
+        steps.append(clahe)
+    steps.append(v2.PILToTensor())
+    pre = v2.Compose(steps)
     ds = datasets.ImageFolder(data_dir, transform=pre)
     groups = np.array([_track_id(p, c) for p, c in ds.samples])  # aligned with load order
     loader = DataLoader(ds, batch_size=512, num_workers=workers, shuffle=False)
@@ -199,7 +268,9 @@ def build_loaders(args):
     if not args.cache:
         return _build_loaders_streaming(args)
 
-    images, labels, classes, groups = _preload(args.data_dir, args.img_size, args.workers)
+    images, labels, classes, groups = _preload(args.data_dir, args.img_size, args.workers, make_clahe(args))
+    if args.clahe:
+        print(f"[data] CLAHE baked into cache (clip={args.clahe_clip}, tiles={args.clahe_tiles})")
 
     # Augmentation runs on cached uint8 tensors — no per-epoch JPEG decode/resize.
     train_tf = v2.Compose([
@@ -230,8 +301,11 @@ def build_loaders(args):
 
 def _build_loaders_streaming(args):
     """Original path: decode + augment from disk every epoch (used by --no-cache / --smoke)."""
+    clahe = make_clahe(args)
+    clahe_step = [clahe] if clahe is not None else []
     train_tf = transforms.Compose([
         transforms.Resize((args.img_size, args.img_size)),
+        *clahe_step,
         transforms.RandomAffine(degrees=10, translate=(0.1, 0.1), scale=(0.9, 1.1)),
         transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
@@ -239,6 +313,7 @@ def _build_loaders_streaming(args):
     ])
     eval_tf = transforms.Compose([
         transforms.Resize((args.img_size, args.img_size)),
+        *clahe_step,
         transforms.ToTensor(),
         transforms.Normalize([0.5] * 3, [0.5] * 3),
     ])
@@ -353,7 +428,7 @@ def main():
 
     summary = {"best_val_acc": best_acc, "epochs_run": epoch, "model": args.model,
                "img_size": args.img_size, "classes": len(classes),
-               "group_split": args.group_split, "stn": args.stn}
+               "group_split": args.group_split, "stn": args.stn, "clahe": args.clahe}
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     print(f"[train] done. best val acc = {best_acc:.4f} | artifacts in {out}/")
 
@@ -366,6 +441,10 @@ def parse_args():
     p.add_argument("--model", default="smallcnn", choices=MODELS)
     p.add_argument("--stn", action="store_true",
                    help="prepend an identity-initialized Spatial Transformer (learned crop/zoom/rotate)")
+    p.add_argument("--clahe", action="store_true",
+                   help="CLAHE contrast normalization on luminance (brightens dark/backlit signs)")
+    p.add_argument("--clahe-clip", type=float, default=2.0, help="CLAHE clip limit")
+    p.add_argument("--clahe-tiles", type=int, default=4, help="CLAHE tile grid (n x n)")
     p.add_argument("--img-size", type=int, default=48)
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--batch-size", type=int, default=256)

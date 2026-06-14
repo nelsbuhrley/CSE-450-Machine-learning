@@ -54,18 +54,33 @@
   </tbody>
 </table>
 
-<h2>4 &middot; Final ensembles (with run2)</h2>
+<h2>3b &middot; STN + CLAHE models — honest track split</h2>
 <table>
-  <caption>run2@100 dominates; 48px models are dead weight in the vote</caption>
-  <thead><tr><th>Ensemble</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <caption>CLAHE = contrast-limited adaptive histogram equalization on Y channel (pure NumPy, no cv2)</caption>
+  <thead><tr><th>Model</th><th>Input</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
   <tbody>
-    <tr class="final"><td>run2 + grouped smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
-    <tr class="best"><td>run2 alone</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
-    <tr><td>run2 + STN smallcnn@48 + grouped smallcnn@48</td><td>99.00%</td><td>100.00%</td><td>2</td></tr>
-    <tr><td>STN smallcnn@48 + grouped smallcnn@48 (prev)</td><td>98.01%</td><td>100.00%</td><td>4</td></tr>
+    <tr class="best"><td>STN + CLAHE smallcnn</td><td>48px</td><td>99.00%</td><td>99.50%</td><td>2</td></tr>
+    <tr><td>STN + CLAHE smallcnn</td><td>64px</td><td>98.01%</td><td>&mdash;</td><td>4</td></tr>
+    <tr><td>STN + CLAHE resnet18</td><td>100px</td><td>97.01%</td><td>&mdash;</td><td>6</td></tr>
+    <tr><td>STN + CLAHE resnet18</td><td>64px</td><td>95.52%</td><td>&mdash;</td><td>9</td></tr>
+    <tr><td>STN + CLAHE smallcnn</td><td>100px</td><td>93.53%</td><td>&mdash;</td><td>13</td></tr>
   </tbody>
 </table>
-<p class="note">run2's only miss is 00039.jpg (near-black 120km/h &rarr; 80) &mdash; a brightness failure no ensembling here fixes.</p>
+
+<h2>4 &middot; Final ensembles (with run2)</h2>
+<table>
+  <caption>run2@100 dominates; 00039.jpg (near-black sign) is the irreducible miss</caption>
+  <thead><tr><th>Ensemble</th><th>Holdout top-1</th><th>Top-2</th><th>Errors</th></tr></thead>
+  <tbody>
+    <tr class="final"><td>run2 + grouped smallcnn@48 + STN+CLAHE smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="final"><td>run2 + grouped smallcnn@48</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr class="best"><td>run2 alone</td><td>99.50%</td><td>100.00%</td><td>1</td></tr>
+    <tr><td>STN+CLAHE smallcnn@48 + grouped smallcnn@48</td><td>99.00%</td><td>99.50%</td><td>2</td></tr>
+    <tr><td>STN+CLAHE smallcnn@48 alone</td><td>99.00%</td><td>99.50%</td><td>2</td></tr>
+    <tr><td>STN smallcnn@48 + grouped smallcnn@48</td><td>98.01%</td><td>100.00%</td><td>4</td></tr>
+  </tbody>
+</table>
+<p class="note">00039.jpg (near-black 120km/h &rarr; 80) is missed by every model and ensemble &mdash; a brightness failure CLAHE did not fully resolve.</p>
 
 </body>
 </html>

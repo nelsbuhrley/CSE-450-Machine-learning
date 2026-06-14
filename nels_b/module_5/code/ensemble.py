@@ -21,7 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from train import CachedTensorDataset, _preload, build_model, eval_transform, make_split
+from train import CLAHE, CachedTensorDataset, _preload, build_model, eval_transform, make_split
 
 
 @torch.no_grad()
@@ -30,8 +30,9 @@ def model_probs(ckpt_path, data_dir, val_split, seed, group_split, workers, devi
     a = ckpt["args"]
     name, img_size, classes = a["model"], a["img_size"], ckpt["classes"]
     stn = a.get("stn", False)
+    clahe = CLAHE(a.get("clahe_clip", 2.0), a.get("clahe_tiles", 4)) if a.get("clahe", False) else None
 
-    images, labels, _, groups = _preload(data_dir, img_size, workers)
+    images, labels, _, groups = _preload(data_dir, img_size, workers, clahe)
     _, val_idx = make_split(labels.numpy(), groups, val_split, seed, group_split)
     ds = CachedTensorDataset(images, labels, val_idx, eval_transform())
     loader = DataLoader(ds, batch_size=512, shuffle=False, num_workers=workers)
