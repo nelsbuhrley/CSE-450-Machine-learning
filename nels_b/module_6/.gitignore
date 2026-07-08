@@ -1,0 +1,16 @@
+# Model artifacts and job logs (regenerable)
+code/training_checkpoints/
+logs/
+
+# Built training corpora and per-author training runs (regenerate with
+# gutenberg.py build; checkpoints are large model artifacts)
+code/input.txt
+runs/*/input.txt
+runs/*/training_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS cruft
+.DS_Store

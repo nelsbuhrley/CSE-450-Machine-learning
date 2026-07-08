@@ -15,3 +15,4 @@ _site/
 Gemfile.lock
 nels_b/module_5/training/
 .code-workspace
+SECRETS.py
